@@ -8,7 +8,9 @@ interface Props {
   plazo: number
 }
 
-function semaforo(val: number, umbralVerde: number, umbralAmarillo: number) {
+type ColorKey = 'verde' | 'amarillo' | 'rojo' | 'neutral'
+
+function semaforo(val: number, umbralVerde: number, umbralAmarillo: number): ColorKey {
   if (val <= umbralVerde) return 'verde'
   if (val <= umbralAmarillo) return 'amarillo'
   return 'rojo'
@@ -38,14 +40,14 @@ export default function KpiGrid({ resultado, plazo }: Props) {
       label: 'LTV real',
       value: fmtPct(resultado.ltv),
       sub: 'Hipoteca / Precio',
-      color: ltvColor,
+      color: ltvColor as ColorKey,
       dot: true,
     },
     {
       label: 'Ratio esfuerzo',
       value: fmtPct(resultado.esfuerzo),
       sub: 'Cuota / Ingresos',
-      color: esfuerzoColor,
+      color: esfuerzoColor as ColorKey,
       dot: true,
     },
     {

@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  }
+
+  body {
+    @apply bg-espai-gris text-espai-texto;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-espai-naranja hover:bg-espai-naranja-dark text-white font-semibold
+           px-5 py-2.5 rounded-lg transition-colors duration-200 flex items-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-espai-gris text-espai-azul font-semibold
+           border border-espai-gris-borde px-5 py-2.5 rounded-lg transition-colors duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-xl p-5 shadow-sm border border-espai-gris-borde;
+  }
+
+  .card-title {
+    @apply text-[10px] uppercase tracking-widest font-bold text-espai-naranja
+           border-b border-espai-gris-borde pb-2 mb-4 flex items-center gap-2;
+  }
+
+  .card-title::before {
+    content: '';
+    @apply inline-block w-0.5 h-3.5 bg-espai-naranja rounded-sm;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 border border-espai-gris-borde rounded-lg text-sm
+           text-espai-texto bg-gray-50 focus:outline-none focus:border-espai-naranja
+           focus:bg-white transition-colors duration-200;
+  }
+
+  .label {
+    @apply block text-[10px] uppercase tracking-wider font-bold text-espai-texto-suave mb-1;
+  }
+
+  .kpi-card {
+    @apply p-3.5 rounded-lg border text-center bg-white;
+  }
+
+  .kpi-label {
+    @apply text-[9px] uppercase tracking-wider text-espai-texto-suave mb-1.5;
+  }
+
+  .kpi-value {
+    @apply text-xl font-bold text-espai-azul;
+  }
+
+  .kpi-sub {
+    @apply text-[9px] text-gray-300 mt-1;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+  .card { box-shadow: none; border: 1px solid #ddd; }
+}

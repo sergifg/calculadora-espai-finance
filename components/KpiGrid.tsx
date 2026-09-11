@@ -27,7 +27,7 @@ export default function KpiGrid({ resultado, plazo }: Props) {
   if (!resultado) return null
 
   const ltvColor = semaforo(resultado.ltv, 80, 90)
-  const esfuerzoColor = semaforo(resultado.esfuerzo, 30, 35)
+  const esfuerzoColor = semaforo(resultado.esfuerzoReal, 30, 35)
 
   const kpis = [
     {
@@ -39,14 +39,14 @@ export default function KpiGrid({ resultado, plazo }: Props) {
     {
       label: 'LTV real',
       value: fmtPct(resultado.ltv),
-      sub: 'Hipoteca / Precio',
+      sub: resultado.ltv > 80 ? '⚠ Supera 80%' : 'Hipoteca / Precio',
       color: ltvColor as ColorKey,
       dot: true,
     },
     {
-      label: 'Ratio esfuerzo',
-      value: fmtPct(resultado.esfuerzo),
-      sub: 'Cuota / Ingresos',
+      label: 'Esfuerzo real',
+      value: fmtPct(resultado.esfuerzoReal),
+      sub: 'Cuota total / Ingresos válidos',
       color: esfuerzoColor as ColorKey,
       dot: true,
     },

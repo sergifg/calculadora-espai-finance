@@ -41,7 +41,7 @@ export default function DashboardClient({ user, initialSimulations }: Props) {
 
   return (
     <div className="min-h-screen bg-espai-gris">
-      <AppHeader userEmail={user.email} />
+      <AppHeader />
 
       <div className="max-w-screen-xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">

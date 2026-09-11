@@ -1,25 +1,14 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 interface Props {
-  userEmail: string
   euribor?: number
 }
 
-export default function AppHeader({ userEmail, euribor = 3.103 }: Props) {
-  const router = useRouter()
-  const supabase = createClient()
-
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
-
+export default function AppHeader({ euribor = 2.527 }: Props) {
   return (
-    <header className="bg-espai-azul border-b-4 border-espai-naranja">
+    <header className="bg-espai-azul border-b-4 border-espai-naranja no-print">
       <div className="max-w-screen-xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <img
@@ -40,25 +29,11 @@ export default function AppHeader({ userEmail, euribor = 3.103 }: Props) {
             <div className="text-white/50 text-[10px] uppercase tracking-wider">Euríbor 12M · sep 2026</div>
             <div className="text-espai-naranja font-bold text-lg">{euribor.toFixed(3)}%</div>
           </div>
-
           <nav className="flex items-center gap-2">
             <Link href="/calculadora" className="text-white/70 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
               Calculadora
             </Link>
-            <Link href="/dashboard" className="text-white/70 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
-              Mis simulaciones
-            </Link>
           </nav>
-
-          <div className="flex items-center gap-3 border-l border-white/20 pl-4">
-            <span className="text-white/50 text-xs hidden md:block">{userEmail}</span>
-            <button
-              onClick={handleLogout}
-              className="text-white/60 hover:text-white text-xs px-3 py-1.5 border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
-            >
-              Salir
-            </button>
-          </div>
         </div>
       </div>
     </header>

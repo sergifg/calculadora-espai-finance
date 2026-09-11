@@ -65,7 +65,143 @@
 }
 
 @media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .no-print { display: none !important; }
-  body { background: white; }
-  .card { box-shadow: none; border: 1px solid #ddd; }
+  body { background: white !important; margin: 0; padding: 0; }
+  #pdf-view { display: block !important; }
+
+  .pdf-page {
+    width: 210mm;
+    min-height: 297mm;
+    max-height: 297mm;
+    padding: 12mm 14mm;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    font-size: 8pt;
+    color: #231f20;
+    background: white;
+    overflow: hidden;
+    page-break-after: avoid;
+  }
+}
+
+/* Estilos PDF — visibles solo en impresión */
+#pdf-view { display: none; }
+
+@media print {
+  /* Ocultar toda la app normal */
+  body > * { display: none !important; }
+  #pdf-wrapper { display: block !important; }
+
+  .pdf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4mm;
+  }
+  .pdf-logo-text {
+    font-size: 16pt;
+    font-weight: 900;
+    color: #002F4F;
+    letter-spacing: 1px;
+  }
+  .pdf-logo-sub {
+    font-size: 7pt;
+    color: #727f9f;
+    margin-top: 1px;
+  }
+  .pdf-header-right { text-align: right; }
+  .pdf-doc-title { font-size: 11pt; font-weight: 700; color: #002F4F; }
+  .pdf-doc-client { font-size: 9pt; color: #f58134; font-weight: 600; margin-top: 1px; }
+  .pdf-doc-date { font-size: 7pt; color: #727f9f; margin-top: 1px; }
+
+  .pdf-divider {
+    height: 3px;
+    background: linear-gradient(to right, #f58134, #002F4F);
+    border-radius: 2px;
+    margin-bottom: 4mm;
+  }
+
+  .pdf-cuota-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #002F4F;
+    color: white;
+    border-radius: 6px;
+    padding: 4mm 6mm;
+    margin-bottom: 5mm;
+  }
+  .pdf-cuota-main { display: flex; flex-direction: column; gap: 1px; }
+  .pdf-cuota-label { font-size: 7pt; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; }
+  .pdf-cuota-value { font-size: 22pt; font-weight: 900; color: #f58134; line-height: 1.1; }
+  .pdf-cuota-total { font-size: 7.5pt; color: rgba(255,255,255,0.8); margin-top: 1px; }
+  .pdf-cuota-params { display: flex; flex-direction: column; gap: 2px; text-align: right; }
+  .pdf-cuota-params span { font-size: 7pt; color: rgba(255,255,255,0.7); }
+
+  .pdf-body { display: flex; gap: 6mm; }
+  .pdf-col { flex: 1; min-width: 0; }
+
+  .pdf-section-title {
+    font-size: 6.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #f58134;
+    border-bottom: 1px solid #e3e7f0;
+    padding-bottom: 1.5mm;
+    margin-bottom: 2mm;
+  }
+  .pdf-section-alert { color: #dc2626; }
+
+  .pdf-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm;
+    margin-bottom: 0;
+  }
+  .pdf-kpi {
+    background: #f2f4f7;
+    border-radius: 4px;
+    padding: 2mm 2.5mm;
+    border-left: 2px solid #e3e7f0;
+  }
+  .pdf-kpi-alert { border-left-color: #dc2626; background: #fef2f2; }
+  .pdf-kpi-label { font-size: 6pt; color: #727f9f; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pdf-kpi-value { font-size: 9pt; font-weight: 700; color: #002F4F; margin-top: 0.5mm; }
+
+  .pdf-table { width: 100%; border-collapse: collapse; font-size: 7pt; }
+  .pdf-table td, .pdf-table th {
+    padding: 1.5mm 2mm;
+    border-bottom: 0.5pt solid #e3e7f0;
+    text-align: left;
+  }
+  .pdf-table td:last-child, .pdf-table th:last-child { text-align: right; font-weight: 600; }
+  .pdf-table th { background: #002F4F; color: white; font-size: 6pt; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .pdf-table-total td { font-weight: 600; color: #002F4F; }
+  .pdf-table-highlight td { font-weight: 700; color: #f58134; background: #fff7f2; font-size: 7.5pt; }
+  .pdf-table-best td { background: #f0fdf4; color: #15803d; font-weight: 600; }
+  .pdf-alert-text { color: #dc2626 !important; font-weight: 600; }
+  .pdf-table-note { font-size: 6pt; color: #727f9f; margin-top: 1mm; }
+
+  .pdf-table-bancos th:nth-child(4),
+  .pdf-table-bancos th:nth-child(5),
+  .pdf-table-bancos th:nth-child(6),
+  .pdf-table-bancos td:nth-child(4),
+  .pdf-table-bancos td:nth-child(5),
+  .pdf-table-bancos td:nth-child(6) { text-align: right; }
+
+  .pdf-alertas { display: flex; flex-direction: column; gap: 1.5mm; }
+  .pdf-alerta-item {
+    font-size: 6.5pt;
+    color: #991b1b;
+    background: #fef2f2;
+    border-left: 2px solid #dc2626;
+    padding: 1.5mm 2mm;
+    border-radius: 2px;
+  }
+
+  .pdf-footer { margin-top: 4mm; }
+  .pdf-footer-line { height: 1px; background: #e3e7f0; margin-bottom: 2mm; }
+  .pdf-footer-text { font-size: 6pt; color: #727f9f; line-height: 1.5; }
 }

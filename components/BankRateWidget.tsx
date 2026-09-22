@@ -139,10 +139,7 @@ export default function BankRateWidget({ bancoId, bancoNombre, tipo, bancoData }
     return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
-  if (!bancoData) return null
-
-  const { actual, historico } = bancoData
-  const mesActual = mesLabelLargo(actual.mes)
+  const mesActual = actual ? mesLabelLargo(actual.mes) : 'sin datos'
 
   const tagColor = tipo === 'fija'
     ? 'bg-blue-100 text-blue-700'
@@ -179,18 +176,25 @@ export default function BankRateWidget({ bancoId, bancoNombre, tipo, bancoData }
               </div>
               <div className="text-right shrink-0">
                 <div className="text-white/50 text-[10px] uppercase tracking-wider">Dato actual</div>
-                <div className="text-espai-naranja font-bold text-xl">{labelValor(bancoData)}</div>
-                {actual.tae && <div className="text-white/40 text-[10px]">TAE {actual.tae.toFixed(2)}%</div>}
+                <div className="text-espai-naranja font-bold text-xl">{bancoData ? labelValor(bancoData) : '—'}</div>
+                {actual?.tae && <div className="text-white/40 text-[10px]">TAE {actual.tae.toFixed(2)}%</div>}
               </div>
               <button onClick={() => setOpen(false)} className="ml-2 text-white/40 hover:text-white text-xl font-bold leading-none">✕</button>
             </div>
 
             {/* Gráfica */}
             <div className="px-6 py-5">
-              <GraficaBanco datos={historico} tipo={tipo} />
+              {(!bancoData || historico.length === 0) && (
+                <div className="text-center py-8 text-gray-400 text-sm">
+                  <div className="text-3xl mb-2">📊</div>
+                  <p>Histórico no disponible aún para este banco.</p>
+                  <p className="text-xs mt-1">Los datos se actualizan mensualmente.</p>
+                </div>
+              )}
+              {bancoData && historico.length > 0 && <GraficaBanco datos={historico} tipo={tipo} />}
 
               {/* Tabla últimos meses */}
-              <div className="mt-4">
+              {bancoData && historico.length > 0 && <div className="mt-4">
                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-2">Histórico reciente</p>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
                   {historico.slice(-6).reverse().map(d => (
@@ -203,7 +207,7 @@ export default function BankRateWidget({ bancoId, bancoNombre, tipo, bancoData }
                     </div>
                   ))}
                 </div>
-              </div>
+              </div>}
             </div>
 
             <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center justify-between">

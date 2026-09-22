@@ -15,7 +15,6 @@ const DEFAULTS: DatosCalculo = {
   precio: 370000,
   precioEscrituracion: 370000,
   fondos: 40000,
-  arras: 0,
   tipoVivienda: 'primera',
   ccaa: 'cataluna',
   itp_pct: ITP_POR_CCAA['cataluna'].pct,
@@ -388,16 +387,6 @@ export default function CalculatorClient() {
                         className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
                     </div>
 
-                    {/* Arras */}
-                    <div className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
-                      <div>
-                        <span className="text-sm text-gray-600">Arras ya pagadas</span>
-                        <p className="text-[10px] text-gray-400">Ya entregadas — se restan de lo que queda por aportar</p>
-                      </div>
-                      <input type="number" value={datos.arras ?? 0} onChange={e => set('arras', n(e.target.value))} step={500}
-                        className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
-                    </div>
-
                     {/* ITP — readonly */}
                     <div className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
                       <span className="text-sm text-gray-600">ITP ({datos.itp_pct}% — {ITP_POR_CCAA[datos.ccaa]?.nombre ?? datos.ccaa})</span>
@@ -456,23 +445,6 @@ export default function CalculatorClient() {
                       </div>
                     </div>
 
-                    {/* Resumen aportación */}
-                    {(datos.arras ?? 0) > 0 && (
-                      <div className="bg-espai-gris rounded-lg p-3 space-y-1.5 mt-1">
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>Fondos propios totales</span>
-                          <span className="font-semibold text-espai-azul">{fmt(datos.fondos)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>− Arras ya entregadas</span>
-                          <span className="font-semibold text-red-500">−{fmt(datos.arras ?? 0)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs font-bold text-espai-azul border-t border-espai-gris-borde pt-1.5">
-                          <span>Pendiente de aportar</span>
-                          <span>{fmt(Math.max(0, datos.fondos - (datos.arras ?? 0)))}</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 

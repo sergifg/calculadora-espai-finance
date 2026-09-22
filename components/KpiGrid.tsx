@@ -51,12 +51,6 @@ export default function KpiGrid({ resultado, plazo }: Props) {
       dot: true,
     },
     {
-      label: 'Liquidez necesaria',
-      value: fmt(resultado.liquidezNecesaria),
-      sub: 'Fondos + gastos − arras',
-      color: 'neutral' as const,
-    },
-    {
       label: 'Total intereses',
       value: fmt(resultado.totalIntereses),
       sub: `a ${plazo} años`,
@@ -77,7 +71,7 @@ export default function KpiGrid({ resultado, plazo }: Props) {
   ]
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-2.5 mb-4">
+    <div className="grid grid-cols-3 gap-2 sm:gap-2.5 mb-4">
       {kpis.map((kpi) => {
         const c = colorMap[kpi.color]
         return (

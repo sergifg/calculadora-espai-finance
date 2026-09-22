@@ -112,8 +112,7 @@ export default function PdfView({ datos, resultado, nombreCliente, fecha }: Prop
               ))}
               <tr className="pdf-table-total"><td>Total gastos</td><td>{fmt(resultado.totalGastos)}</td></tr>
               <tr className="pdf-table-total"><td>Fondos propios</td><td>{fmt(datos.fondos)}</td></tr>
-              {(datos.arras ?? 0) > 0 && <tr><td>Arras ya pagadas</td><td>−{fmt(datos.arras)}</td></tr>}
-              <tr className="pdf-table-highlight"><td>LIQUIDEZ NECESARIA</td><td>{fmt(resultado.liquidezNecesaria)}</td></tr>
+              <tr className="pdf-table-highlight"><td>TOTAL NECESARIO</td><td>{fmt(resultado.totalNecesario)}</td></tr>
             </tbody>
           </table>
 

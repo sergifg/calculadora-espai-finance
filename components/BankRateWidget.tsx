@@ -139,6 +139,7 @@ export default function BankRateWidget({ bancoId, bancoNombre, tipo, bancoData }
     return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
+  const { actual, historico } = bancoData ?? { actual: null, historico: [] as DatoBanco[] }
   const mesActual = actual ? mesLabelLargo(actual.mes) : 'sin datos'
 
   const tagColor = tipo === 'fija'

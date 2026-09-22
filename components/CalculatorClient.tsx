@@ -7,7 +7,7 @@ import BankTable from '@/components/BankTable'
 import AmortTable from '@/components/AmortTable'
 import PdfView from '@/components/PdfView'
 import {
-  calcular, fmt, fmtCuota, DatosCalculo, ResultadoCalculo, Titular,
+  calcular, fmt, fmtCuota, DatosCalculo, ResultadoCalculo, Titular, GastoExtra,
   ITP_POR_CCAA, EURIBOR_ACTUAL, EURIBOR_MES, ESCENARIOS_EURIBOR, pmt, brutoAnualANetoMensual
 } from '@/lib/finance'
 
@@ -15,6 +15,7 @@ const DEFAULTS: DatosCalculo = {
   precio: 370000,
   precioEscrituracion: 370000,
   fondos: 40000,
+  arras: 0,
   tipoVivienda: 'primera',
   ccaa: 'cataluna',
   itp_pct: ITP_POR_CCAA['cataluna'].pct,
@@ -33,7 +34,7 @@ const DEFAULTS: DatosCalculo = {
   gasto_registro: 400,
   gasto_gestoria: 500,
   gasto_espai: 6050,
-  gasto_otros: 0,
+  gastosExtra: [],
   seguroVida: 40,
   seguroHogar: 25,
 }
@@ -92,6 +93,29 @@ export default function CalculatorClient() {
       ...prev,
       titulares: prev.titulares.map((t, i) =>
         i === idx ? { ...t, [field]: value } : t
+      )
+    }))
+  }
+
+  function addGastoExtra() {
+    setDatos(prev => ({
+      ...prev,
+      gastosExtra: [...(prev.gastosExtra ?? []), { label: '', importe: 0 }]
+    }))
+  }
+
+  function removeGastoExtra(idx: number) {
+    setDatos(prev => ({
+      ...prev,
+      gastosExtra: (prev.gastosExtra ?? []).filter((_, i) => i !== idx)
+    }))
+  }
+
+  function updateGastoExtra(idx: number, field: keyof GastoExtra, value: string | number) {
+    setDatos(prev => ({
+      ...prev,
+      gastosExtra: (prev.gastosExtra ?? []).map((g, i) =>
+        i === idx ? { ...g, [field]: value } : g
       )
     }))
   }
@@ -300,12 +324,6 @@ export default function CalculatorClient() {
                           onChange={e => set('precioEscrituracion', n(e.target.value))} step={1000} />
                         <p className="text-[10px] text-gray-400 mt-1">Base para calcular ITP</p>
                       </div>
-                      <div className="sm:col-span-2">
-                        <label className="label">Aportación del comprador (€)</label>
-                        <input type="number" className="input-field" value={datos.fondos}
-                          onChange={e => set('fondos', n(e.target.value))} step={1000} />
-                        <p className="text-[10px] text-gray-400 mt-1">Fondos propios disponibles (sin incluir gastos)</p>
-                      </div>
                       <div>
                         <label className="label">Comunidad Autónoma</label>
                         <select className="input-field" value={datos.ccaa} onChange={e => handleCcaaChange(e.target.value)}>
@@ -358,43 +376,67 @@ export default function CalculatorClient() {
 
                 {/* ── TAB: GASTOS ── */}
                 {tabActivo === 'gastos' && (
-                  <>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
-                        <span className="text-sm text-gray-600">ITP ({datos.itp_pct}% — {ITP_POR_CCAA[datos.ccaa]?.nombre ?? datos.ccaa})</span>
-                        <span className="font-semibold text-espai-azul">{fmt(resultado.itp)}</span>
+                  <div className="space-y-2">
+
+                    {/* Aportación del comprador (antes en Vivienda) */}
+                    <div className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
+                      <div>
+                        <span className="text-sm text-gray-700 font-semibold">Aportación del comprador</span>
+                        <p className="text-[10px] text-gray-400">Fondos propios disponibles</p>
                       </div>
-                      {([
-                        { key: 'gasto_tasacion' as const, label: 'Tasación bancaria' },
-                        { key: 'gasto_notaria'  as const, label: 'Notaría' },
-                        { key: 'gasto_registro' as const, label: 'Registro de la Propiedad' },
-                        { key: 'gasto_gestoria' as const, label: 'Gestoría' },
-                        { key: 'gasto_espai'    as const, label: 'Comisión Espai Finance' },
-                        { key: 'gasto_otros'    as const, label: 'Otros gastos' },
-                      ]).map(g => (
-                        <div key={g.key} className="flex justify-between items-center py-2 border-b border-espai-gris-borde last:border-0">
-                          <span className="text-sm text-gray-600">{g.label}</span>
-                          <input type="number" value={datos[g.key]} onChange={e => set(g.key, n(e.target.value))}
-                            className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
-                        </div>
-                      ))}
+                      <input type="number" value={datos.fondos} onChange={e => set('fondos', n(e.target.value))} step={1000}
+                        className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
                     </div>
 
-                    <div className="bg-espai-azul rounded-xl p-4 space-y-2">
-                      <div className="flex justify-between text-sm text-white/70">
-                        <span>Fondos propios</span>
-                        <span className="font-semibold text-white">{fmt(datos.fondos)}</span>
+                    {/* Arras */}
+                    <div className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
+                      <div>
+                        <span className="text-sm text-gray-600">Arras ya pagadas</span>
+                        <p className="text-[10px] text-gray-400">Se descuenta de la liquidez necesaria</p>
                       </div>
-                      <div className="flex justify-between text-sm text-white/70">
-                        <span>Total gastos</span>
-                        <span className="font-semibold text-white">{fmt(resultado.totalGastos)}</span>
-                      </div>
-                      <div className="border-t border-white/20 pt-2 flex justify-between items-center">
-                        <span className="text-white font-bold text-sm uppercase tracking-wider">Liquidez necesaria</span>
-                        <span className="text-espai-naranja font-bold text-xl">{fmt(resultado.totalNecesario)}</span>
-                      </div>
+                      <input type="number" value={datos.arras} onChange={e => set('arras', n(e.target.value))} step={500}
+                        className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
                     </div>
-                  </>
+
+                    {/* ITP — readonly */}
+                    <div className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
+                      <span className="text-sm text-gray-600">ITP ({datos.itp_pct}% — {ITP_POR_CCAA[datos.ccaa]?.nombre ?? datos.ccaa})</span>
+                      <span className="text-sm font-semibold text-espai-azul pr-1">{fmt(resultado.itp)}</span>
+                    </div>
+
+                    {/* Gastos estándar */}
+                    {([
+                      { key: 'gasto_tasacion' as const, label: 'Tasación bancaria' },
+                      { key: 'gasto_notaria'  as const, label: 'Notaría' },
+                      { key: 'gasto_registro' as const, label: 'Registro de la Propiedad' },
+                      { key: 'gasto_gestoria' as const, label: 'Gestoría' },
+                      { key: 'gasto_espai'    as const, label: 'Comisión Espai Finance' },
+                    ]).map(g => (
+                      <div key={g.key} className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
+                        <span className="text-sm text-gray-600">{g.label}</span>
+                        <input type="number" value={datos[g.key]} onChange={e => set(g.key, n(e.target.value))}
+                          className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
+                      </div>
+                    ))}
+
+                    {/* Gastos personalizados */}
+                    {(datos.gastosExtra ?? []).map((g, idx) => (
+                      <div key={idx} className="flex items-center gap-2 py-2 border-b border-espai-gris-borde">
+                        <input type="text" value={g.label} onChange={e => updateGastoExtra(idx, 'label', e.target.value)}
+                          placeholder="Concepto..."
+                          className="flex-1 border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
+                        <input type="number" value={g.importe} onChange={e => updateGastoExtra(idx, 'importe', n(e.target.value))}
+                          className="w-24 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
+                        <button onClick={() => removeGastoExtra(idx)} className="text-gray-300 hover:text-red-400 transition-colors text-sm font-bold shrink-0">✕</button>
+                      </div>
+                    ))}
+
+                    {/* Añadir gasto */}
+                    <button onClick={addGastoExtra}
+                      className="w-full py-2 rounded-lg font-semibold text-sm border-2 border-dashed border-espai-gris-borde text-espai-texto-suave hover:border-espai-naranja hover:text-espai-naranja transition-colors mt-1">
+                      + Añadir gasto personalizado
+                    </button>
+                  </div>
                 )}
 
               </div>

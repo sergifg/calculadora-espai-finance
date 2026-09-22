@@ -4,10 +4,16 @@ export interface Titular {
   tipoContrato: 'fijo' | 'autonomo' | 'temporal' | 'pensionista'
 }
 
+export interface GastoExtra {
+  label: string
+  importe: number
+}
+
 export interface DatosCalculo {
   precio: number
   precioEscrituracion: number
   fondos: number
+  arras: number
   tipoVivienda: 'primera' | 'segunda'
   ccaa: string
   itp_pct: number
@@ -24,7 +30,7 @@ export interface DatosCalculo {
   gasto_registro: number
   gasto_gestoria: number
   gasto_espai: number
-  gasto_otros: number
+  gastosExtra: GastoExtra[]
   seguroVida: number
   seguroHogar: number
 }
@@ -32,18 +38,19 @@ export interface DatosCalculo {
 export interface ResultadoCalculo {
   hipoteca: number
   cuota: number
-  cuotaTotal: number        // cuota + seguros
-  cuotaMixtaFija: number   // cuota durante período fijo (mixta)
-  cuotaMixtaVar: number    // cuota durante período variable (mixta)
+  cuotaTotal: number
+  cuotaMixtaFija: number
+  cuotaMixtaVar: number
   ltv: number
   esfuerzo: number
-  esfuerzoReal: number     // incluyendo seguros
-  ingresosValidos: number  // ingresos ajustados según tipo contrato
+  esfuerzoReal: number
+  ingresosValidos: number
   totalIntereses: number
   totalPagado: number
   tasacionMinima: number
   totalGastos: number
   totalNecesario: number
+  liquidezNecesaria: number
   itp: number
   alertaLtv: 'ok' | 'aviso' | 'critico'
   alertaEsfuerzo: 'ok' | 'aviso' | 'critico'
@@ -152,8 +159,11 @@ export function calcular(datos: DatosCalculo): ResultadoCalculo {
   const esfuerzoReal = ingresosValidos > 0 ? (cuotaTotal / ingresosValidos) * 100 : 0
 
   const itp = datos.precioEscrituracion * (datos.itp_pct / 100)
+  const totalGastosExtra = (datos.gastosExtra ?? []).reduce((s, g) => s + g.importe, 0)
   const totalGastos = itp + datos.gasto_tasacion + datos.gasto_notaria +
-    datos.gasto_registro + datos.gasto_gestoria + datos.gasto_espai + datos.gasto_otros
+    datos.gasto_registro + datos.gasto_gestoria + datos.gasto_espai + totalGastosExtra
+  const arras = datos.arras ?? 0
+  const liquidezNecesaria = Math.max(0, datos.fondos + totalGastos - arras)
 
   // Alertas regulatorias (Circular 6/2023 Banco de España)
   const alertaRegulatorio: string[] = []
@@ -184,6 +194,7 @@ export function calcular(datos: DatosCalculo): ResultadoCalculo {
     tasacionMinima: hipoteca / (datos.tipoVivienda === 'segunda' ? 0.70 : 0.80),
     totalGastos,
     totalNecesario: datos.fondos + totalGastos,
+    liquidezNecesaria,
     itp,
     alertaLtv: ltv <= ltvMax ? 'ok' : ltv <= ltvMax + 10 ? 'aviso' : 'critico',
     alertaEsfuerzo: esfuerzoReal <= 30 ? 'ok' : esfuerzoReal <= 35 ? 'aviso' : 'critico',

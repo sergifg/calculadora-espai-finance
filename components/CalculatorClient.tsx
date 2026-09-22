@@ -78,7 +78,7 @@ export default function CalculatorClient() {
     <>
       {/* Vista normal */}
       <div className="min-h-screen bg-espai-gris no-print">
-        <AppHeader euribor={EURIBOR_ACTUAL} />
+        <AppHeader />
 
         {/* Cliente bar */}
         <div className="bg-espai-azul-mid border-b border-white/10">

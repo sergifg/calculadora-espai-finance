@@ -614,25 +614,107 @@ export default function CalculatorClient() {
 
             {datos.precio > 0 && <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #002F4F, #293C5B)', borderLeft: '5px solid #f58134' }}>
               <div className="p-4 sm:p-6">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Cuota mensual</div>
-                    <div className="text-4xl sm:text-5xl font-bold text-espai-naranja leading-none">{fmtCuota(resultado.cuota)}</div>
-                    {(datos.seguroVida || datos.seguroHogar) ? (
-                      <div className="text-white/60 text-xs mt-1.5">
-                        + seguros {fmtCuota((datos.seguroVida || 0) + (datos.seguroHogar || 0))} =
-                        <span className="text-white font-bold ml-1">{fmtCuota(resultado.cuotaTotal)}</span>
+
+                {/* ── FIJA ── */}
+                {datos.tipoHipoteca === 'fija' && (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Cuota mensual · fija</div>
+                      <div className="text-4xl sm:text-5xl font-bold text-espai-naranja leading-none">{fmtCuota(resultado.cuota)}</div>
+                      {(datos.seguroVida || datos.seguroHogar) ? (
+                        <div className="text-white/60 text-xs mt-1.5">
+                          + seguros {fmtCuota((datos.seguroVida || 0) + (datos.seguroHogar || 0))} =
+                          <span className="text-white font-bold ml-1">{fmtCuota(resultado.cuotaTotal)}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-white/40 text-[10px] uppercase tracking-wider">Hipoteca</div>
+                      <div className="text-white font-bold text-lg">{fmt(resultado.hipoteca)}</div>
+                      <div className="text-white/40 text-[10px] mt-1">{datos.tin.toFixed(2)}% TIN · {datos.plazo}a</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── VARIABLE ── */}
+                {datos.tipoHipoteca === 'variable' && (
+                  <>
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div className="flex-1">
+                        <div className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Cuota mensual · variable</div>
+                        <div className="text-4xl sm:text-5xl font-bold text-espai-naranja leading-none">{fmtCuota(resultado.cuota)}</div>
+                        <div className="text-white/50 text-xs mt-1.5">Eur {datos.euribor.toFixed(3)}% + {datos.diferencial}% = {resultado.tinEfectivo.toFixed(3)}% TIN</div>
+                        {(datos.seguroVida || datos.seguroHogar) ? (
+                          <div className="text-white/40 text-xs mt-0.5">
+                            + seguros = <span className="text-white/70 font-bold">{fmtCuota(resultado.cuotaTotal)}</span>
+                          </div>
+                        ) : null}
                       </div>
-                    ) : null}
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-white/40 text-[10px] uppercase tracking-wider">Hipoteca</div>
-                    <div className="text-white font-bold text-lg">{fmt(resultado.hipoteca)}</div>
-                    <div className="text-white/40 text-[10px] mt-1">{resultado.tinEfectivo.toFixed(2)}% TIN · {datos.plazo}a</div>
-                  </div>
-                </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-white/40 text-[10px] uppercase tracking-wider">Hipoteca</div>
+                        <div className="text-white font-bold text-lg">{fmt(resultado.hipoteca)}</div>
+                        <div className="text-white/40 text-[10px] mt-1">{datos.plazo} años</div>
+                      </div>
+                    </div>
+                    {/* Rango escenarios */}
+                    <div className="grid grid-cols-3 gap-1.5 text-center">
+                      <div className="bg-white/5 rounded-lg px-2 py-2">
+                        <div className="text-[10px] text-green-400 font-semibold mb-0.5">Optimista</div>
+                        <div className="text-white font-bold text-sm">{fmtCuota(cuotaOptimista)}</div>
+                        <div className="text-white/30 text-[9px]">Eur {ESCENARIOS_EURIBOR.optimista.valor}%</div>
+                      </div>
+                      <div className="bg-espai-naranja/20 border border-espai-naranja/30 rounded-lg px-2 py-2">
+                        <div className="text-[10px] text-espai-naranja font-semibold mb-0.5">Hoy</div>
+                        <div className="text-espai-naranja font-bold text-sm">{fmtCuota(resultado.cuota)}</div>
+                        <div className="text-white/30 text-[9px]">Eur {datos.euribor.toFixed(2)}%</div>
+                      </div>
+                      <div className="bg-white/5 rounded-lg px-2 py-2">
+                        <div className="text-[10px] text-red-400 font-semibold mb-0.5">Pesimista</div>
+                        <div className="text-white font-bold text-sm">{fmtCuota(cuotaPesimista)}</div>
+                        <div className="text-white/30 text-[9px]">Eur {ESCENARIOS_EURIBOR.pesimista.valor}%</div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* ── MIXTA ── */}
+                {datos.tipoHipoteca === 'mixta' && (
+                  <>
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Hipoteca mixta</div>
+                        <div className="text-white font-bold text-lg">{fmt(resultado.hipoteca)}</div>
+                        <div className="text-white/40 text-[10px] mt-0.5">{datos.plazo} años · {datos.periodoFijo}a fijo + {datos.plazo - datos.periodoFijo}a variable</div>
+                      </div>
+                      {(datos.seguroVida || datos.seguroHogar) && (
+                        <div className="text-right shrink-0">
+                          <div className="text-white/40 text-[10px]">+ seguros</div>
+                          <div className="text-espai-naranja font-bold">{fmtCuota(resultado.cuotaTotal)}</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/10 rounded-xl p-3">
+                        <div className="text-[10px] text-blue-300 font-semibold uppercase tracking-wider mb-1.5">
+                          Años 1–{datos.periodoFijo} · Fijo
+                        </div>
+                        <div className="text-3xl font-bold text-white">{fmtCuota(resultado.cuotaMixtaFija)}</div>
+                        <div className="text-white/40 text-[10px] mt-1">{datos.tinFijo}% TIN fijo</div>
+                      </div>
+                      <div className="bg-espai-naranja/15 border border-espai-naranja/25 rounded-xl p-3">
+                        <div className="text-[10px] text-espai-naranja font-semibold uppercase tracking-wider mb-1.5">
+                          Años {datos.periodoFijo + 1}–{datos.plazo} · Variable
+                        </div>
+                        <div className="text-3xl font-bold text-espai-naranja">{fmtCuota(resultado.cuotaMixtaVar)}</div>
+                        <div className="text-white/40 text-[10px] mt-1">Eur+{datos.diferencial}% = {resultado.tinEfectivo.toFixed(2)}%</div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
               </div>
-              {/* Barra de esfuerzo */}
+
+              {/* Barra de esfuerzo — siempre */}
               <div className="px-4 sm:px-6 pb-4">
                 <div className="flex items-center justify-between text-[10px] text-white/40 mb-1">
                   <span>Esfuerzo mensual</span>
@@ -647,7 +729,7 @@ export default function CalculatorClient() {
                   />
                 </div>
               </div>
-              {/* Hint mobile — solo en xs */}
+              {/* Hint mobile */}
               <div className="xl:hidden bg-white/5 px-4 py-2 text-center">
                 <span className="text-white/30 text-[10px]">↓ Ajusta los datos abajo para recalcular</span>
               </div>

@@ -20,10 +20,9 @@ export default function AmortTable({ hipoteca, tin, plazo }: Props) {
     <div className="card">
       <div
         className="flex items-center justify-between cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
       >
         <div className="card-title mb-0">Tabla de amortización año a año</div>
-        <button className="text-xs px-3 py-1.5 border border-espai-gris-borde rounded-lg text-espai-azul-mid font-semibold hover:bg-espai-naranja hover:text-white hover:border-espai-naranja transition-colors">
+        <button onClick={() => setExpanded(!expanded)} className="text-xs px-3 py-1.5 border border-espai-gris-borde rounded-lg text-espai-azul-mid font-semibold hover:bg-espai-naranja hover:text-white hover:border-espai-naranja transition-colors">
           {expanded ? 'Ocultar ▲' : 'Ver tabla ▼'}
         </button>
       </div>
@@ -35,9 +34,9 @@ export default function AmortTable({ hipoteca, tin, plazo }: Props) {
               <tr className="bg-espai-azul text-white">
                 <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-wide">Año</th>
                 <th className="text-right px-3 py-2.5 text-[10px] uppercase tracking-wide">Cuota anual</th>
-                <th className="text-right px-3 py-2.5 text-[10px] uppercase tracking-wide">Capital amort.</th>
+                <th className="text-right px-3 py-2.5 text-[10px] uppercase tracking-wide hidden sm:table-cell">Capital amort.</th>
                 <th className="text-right px-3 py-2.5 text-[10px] uppercase tracking-wide">Intereses</th>
-                <th className="text-right px-3 py-2.5 text-[10px] uppercase tracking-wide">Capital pendiente</th>
+                <th className="text-right px-3 py-2.5 text-[10px] uppercase tracking-wide hidden sm:table-cell">Capital pendiente</th>
               </tr>
             </thead>
             <tbody>
@@ -50,9 +49,9 @@ export default function AmortTable({ hipoteca, tin, plazo }: Props) {
                 >
                   <td className="px-3 py-2">{fila.anio}</td>
                   <td className="px-3 py-2 text-right">{fmt(fila.cuotaAnual)}</td>
-                  <td className="px-3 py-2 text-right">{fmt(fila.capital)}</td>
+                  <td className="px-3 py-2 text-right hidden sm:table-cell">{fmt(fila.capital)}</td>
                   <td className="px-3 py-2 text-right">{fmt(fila.intereses)}</td>
-                  <td className="px-3 py-2 text-right font-medium text-espai-azul">{fmt(fila.saldo)}</td>
+                  <td className="px-3 py-2 text-right font-medium text-espai-azul hidden sm:table-cell">{fmt(fila.saldo)}</td>
                 </tr>
               ))}
             </tbody>

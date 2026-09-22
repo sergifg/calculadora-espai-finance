@@ -38,7 +38,7 @@
   }
 
   .input-field {
-    @apply w-full px-3 py-2 border border-espai-gris-borde rounded-lg text-sm
+    @apply w-full px-3 py-2.5 sm:py-2 border border-espai-gris-borde rounded-lg text-sm
            text-espai-texto bg-gray-50 focus:outline-none focus:border-espai-naranja
            focus:bg-white transition-colors duration-200;
   }
@@ -65,6 +65,8 @@
 }
 
 @media print {
+  @page { margin: 0; size: A4 portrait; }
+
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .no-print { display: none !important; }
   body { background: white !important; margin: 0; padding: 0; }
@@ -73,14 +75,12 @@
   .pdf-page {
     width: 210mm;
     min-height: 297mm;
-    max-height: 297mm;
     padding: 12mm 14mm;
     box-sizing: border-box;
     font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
     font-size: 8pt;
     color: #231f20;
     background: white;
-    overflow: hidden;
     page-break-after: avoid;
   }
 }
@@ -138,6 +138,21 @@
   .pdf-cuota-total { font-size: 7.5pt; color: rgba(255,255,255,0.8); margin-top: 1px; }
   .pdf-cuota-params { display: flex; flex-direction: column; gap: 2px; text-align: right; }
   .pdf-cuota-params span { font-size: 7pt; color: rgba(255,255,255,0.7); }
+  .pdf-cuota-mixta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm;
+    flex: 1;
+  }
+  .pdf-cuota-mixta-period {
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 2mm 3mm;
+  }
+  .pdf-cuota-mixta-label { font-size: 6pt; color: rgba(255,255,255,0.6); margin-bottom: 1px; }
+  .pdf-cuota-mixta-value { font-size: 15pt; font-weight: 900; line-height: 1.1; }
+  .pdf-cuota-mixta-fija .pdf-cuota-mixta-value { color: white; }
+  .pdf-cuota-mixta-var .pdf-cuota-mixta-value { color: #f58134; }
 
   .pdf-body { display: flex; gap: 6mm; }
   .pdf-col { flex: 1; min-width: 0; }
@@ -203,5 +218,5 @@
 
   .pdf-footer { margin-top: 4mm; }
   .pdf-footer-line { height: 1px; background: #e3e7f0; margin-bottom: 2mm; }
-  .pdf-footer-text { font-size: 6pt; color: #727f9f; line-height: 1.5; }
+  .pdf-footer-text { font-size: 6pt; color: #727f9f; line-height: 1.5; word-break: break-word; }
 }

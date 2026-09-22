@@ -255,7 +255,7 @@ export default function CalculatorClient() {
               {showSimPanel && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowSimPanel(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-espai-gris-borde rounded-xl shadow-xl z-50 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-white border border-espai-gris-borde rounded-xl shadow-xl z-50 overflow-hidden">
                   {/* Guardar nueva */}
                   <div className="p-3 border-b border-espai-gris-borde bg-gray-50">
                     <p className="text-[10px] uppercase tracking-widest font-bold text-espai-texto-suave mb-2">Guardar simulación actual</p>
@@ -309,10 +309,10 @@ export default function CalculatorClient() {
         </div>
 
         {/* Layout principal: en mobile las columnas se apilan, col derecha sube (order) */}
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-4 flex flex-col xl:grid xl:grid-cols-2 gap-4">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-4 flex flex-col lg:grid lg:grid-cols-2 gap-4">
 
           {/* COL IZQUIERDA — formularios con tabs (en mobile va debajo, order-2) */}
-          <div className="order-2 xl:order-1">
+          <div className="order-2 lg:order-1">
             <div className="card p-0 overflow-hidden">
 
               {/* Tabs */}
@@ -714,7 +714,7 @@ export default function CalculatorClient() {
           </div>
 
           {/* COL DERECHA — resultados (en mobile va arriba, order-1) */}
-          <div className="space-y-4 order-1 xl:order-2">
+          <div className="space-y-4 order-1 lg:order-2">
 
             {/* Estado vacío — sin precio */}
             {datos.precio === 0 && (
@@ -734,7 +734,7 @@ export default function CalculatorClient() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Cuota mensual · fija</div>
-                      <div className="text-4xl sm:text-5xl font-bold text-espai-naranja leading-none">{fmtCuota(resultado.cuota)}</div>
+                      <div className="text-3xl sm:text-4xl xl:text-5xl font-bold text-espai-naranja leading-none">{fmtCuota(resultado.cuota)}</div>
                       {(datos.seguroVida || datos.seguroHogar) ? (
                         <div className="text-white/60 text-xs mt-1.5">
                           + seguros {fmtCuota((datos.seguroVida || 0) + (datos.seguroHogar || 0))} =
@@ -756,7 +756,7 @@ export default function CalculatorClient() {
                     <div className="flex items-start justify-between gap-3 mb-4">
                       <div className="flex-1">
                         <div className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Cuota mensual · variable</div>
-                        <div className="text-4xl sm:text-5xl font-bold text-espai-naranja leading-none">{fmtCuota(resultado.cuota)}</div>
+                        <div className="text-3xl sm:text-4xl xl:text-5xl font-bold text-espai-naranja leading-none">{fmtCuota(resultado.cuota)}</div>
                         <div className="text-white/50 text-xs mt-1.5">Eur {datos.euribor.toFixed(3)}% + {datos.diferencial}% = {resultado.tinEfectivo.toFixed(3)}% TIN</div>
                         {(datos.seguroVida || datos.seguroHogar) ? (
                           <div className="text-white/40 text-xs mt-0.5">
@@ -771,7 +771,7 @@ export default function CalculatorClient() {
                       </div>
                     </div>
                     {/* Rango escenarios */}
-                    <div className="grid grid-cols-3 gap-1.5 text-center">
+                    <div className="grid grid-cols-3 gap-1 sm:gap-1.5 text-center">
                       <div className="bg-white/5 rounded-lg px-2 py-2">
                         <div className="text-[10px] text-green-400 font-semibold mb-0.5">Optimista</div>
                         <div className="text-white font-bold text-sm">{fmtCuota(cuotaOptimista)}</div>
@@ -853,7 +853,7 @@ export default function CalculatorClient() {
             {datos.precio > 0 && <>
               <KpiGrid resultado={resultado} plazo={datos.plazo} ingresosMes={resultado.ingresosValidos} />
               <BankTable hipoteca={resultado.hipoteca} ingresosMes={resultado.ingresosValidos} euribor={datos.euribor} currentTin={datos.tin} />
-              <AmortTable hipoteca={resultado.hipoteca} tin={datos.tin} plazo={datos.plazo} />
+              <AmortTable hipoteca={resultado.hipoteca} tin={resultado.tinEfectivo} plazo={datos.plazo} />
             </>}
           </div>
         </div>

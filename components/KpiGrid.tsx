@@ -73,7 +73,7 @@ export default function KpiGrid({ resultado, plazo, ingresosMes }: Props) {
   ]
 
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-2.5 mb-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 mb-4">
       {kpis.map((kpi) => {
         const c = colorMap[kpi.color]
         return (
@@ -85,7 +85,7 @@ export default function KpiGrid({ resultado, plazo, ingresosMes }: Props) {
               {kpi.label}
             </div>
             <div className={`kpi-value ${c.value}`}>{kpi.value}</div>
-            <div className="kpi-sub hidden sm:block">{kpi.sub}</div>
+            <div className="kpi-sub">{kpi.sub}</div>
           </div>
         )
       })}

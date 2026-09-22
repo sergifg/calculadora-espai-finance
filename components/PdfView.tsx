@@ -66,15 +66,32 @@ export default function PdfView({ datos, resultado, nombreCliente, fecha }: Prop
 
       {/* CUOTA DESTACADA */}
       <div className="pdf-cuota-hero">
-        <div className="pdf-cuota-main">
-          <span className="pdf-cuota-label">Cuota mensual</span>
-          <span className="pdf-cuota-value">{fmtCuota(resultado.cuota)}</span>
-          {(datos.seguroVida || datos.seguroHogar) && (
-            <span className="pdf-cuota-total">+ seguros = <strong>{fmtCuota(resultado.cuotaTotal)}</strong> total</span>
-          )}
-        </div>
+        {datos.tipoHipoteca === 'mixta' ? (
+          <div className="pdf-cuota-mixta">
+            <div className="pdf-cuota-mixta-period pdf-cuota-mixta-fija">
+              <div className="pdf-cuota-mixta-label">Años 1–{datos.periodoFijo} · {datos.tinFijo}% fijo</div>
+              <div className="pdf-cuota-mixta-value">{fmtCuota(resultado.cuotaMixtaFija)}</div>
+            </div>
+            <div className="pdf-cuota-mixta-period pdf-cuota-mixta-var">
+              <div className="pdf-cuota-mixta-label">Años {datos.periodoFijo + 1}–{datos.plazo} · Eur+{datos.diferencial}%</div>
+              <div className="pdf-cuota-mixta-value">{fmtCuota(resultado.cuotaMixtaVar)}</div>
+            </div>
+          </div>
+        ) : (
+          <div className="pdf-cuota-main">
+            <span className="pdf-cuota-label">Cuota mensual</span>
+            <span className="pdf-cuota-value">{fmtCuota(resultado.cuota)}</span>
+            {(datos.seguroVida || datos.seguroHogar) && (
+              <span className="pdf-cuota-total">+ seguros = <strong>{fmtCuota(resultado.cuotaTotal)}</strong> total</span>
+            )}
+          </div>
+        )}
         <div className="pdf-cuota-params">
-          <span>{tipoLabel[datos.tipoHipoteca]} · {resultado.tinEfectivo.toFixed(2)}% TIN · {datos.plazo} años</span>
+          <span>{tipoLabel[datos.tipoHipoteca]} · {
+            datos.tipoHipoteca === 'mixta'
+              ? `${datos.tinFijo}% fijo ${datos.periodoFijo}a → ${(datos.euribor + datos.diferencial).toFixed(2)}% var.`
+              : `${resultado.tinEfectivo.toFixed(2)}% TIN`
+          } · {datos.plazo} años</span>
           <span>{fmt(resultado.hipoteca)} financiado · {ccaaNombre}</span>
           <span>{titularesResumen}</span>
         </div>
@@ -108,7 +125,7 @@ export default function PdfView({ datos, resultado, nombreCliente, fecha }: Prop
               <tr><td>Gestoría</td><td>{fmt(datos.gasto_gestoria)}</td></tr>
               {datos.gasto_espai > 0 && <tr><td>Espai Finance</td><td>{fmt(datos.gasto_espai)}</td></tr>}
               {(datos.gastosExtra ?? []).filter(g => g.importe > 0).map((g, i) => (
-                <tr key={i}><td>{g.label || 'Otros'}</td><td>{fmt(g.importe)}</td></tr>
+                <tr key={i}><td>{g.label?.trim() || 'Gasto personalizado'}</td><td>{fmt(g.importe)}</td></tr>
               ))}
               <tr className="pdf-table-total"><td>Total gastos</td><td>{fmt(resultado.totalGastos)}</td></tr>
               <tr className="pdf-table-total"><td>Fondos propios</td><td>{fmt(datos.fondos)}</td></tr>
@@ -117,7 +134,7 @@ export default function PdfView({ datos, resultado, nombreCliente, fecha }: Prop
           </table>
 
           {/* SEGUROS */}
-          {(datos.seguroVida > 0 || datos.seguroHogar > 0) && (
+          {((datos.seguroVida ?? 0) > 0 || (datos.seguroHogar ?? 0) > 0) && (
             <>
               <div className="pdf-section-title" style={{ marginTop: '10px' }}>Seguros estimados</div>
               <table className="pdf-table">

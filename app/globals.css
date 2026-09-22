@@ -56,7 +56,7 @@
   }
 
   .kpi-value {
-    @apply text-xl font-bold text-espai-azul;
+    @apply text-base sm:text-xl font-bold text-espai-azul;
   }
 
   .kpi-sub {

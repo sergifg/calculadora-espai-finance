@@ -82,8 +82,8 @@ export default function CalculatorClient() {
 
         {/* Cliente bar */}
         <div className="bg-espai-azul-mid border-b border-white/10">
-          <div className="max-w-screen-xl mx-auto px-6 py-3 flex items-center gap-4">
-            <label className="text-[10px] text-white/60 uppercase tracking-widest whitespace-nowrap">Cliente:</label>
+          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-3">
+            <label className="text-[10px] text-white/60 uppercase tracking-widest whitespace-nowrap hidden sm:block">Cliente:</label>
             <input
               type="text"
               value={nombreCliente}
@@ -91,13 +91,13 @@ export default function CalculatorClient() {
               placeholder="Nombre del cliente..."
               className="bg-white/10 border border-white/20 text-white placeholder-white/30 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-espai-naranja flex-1 max-w-sm"
             />
-            <span className="text-white/30 text-xs hidden sm:block">Aparece en el PDF generado</span>
+            <span className="text-white/30 text-xs hidden md:block">Aparece en el PDF generado</span>
           </div>
         </div>
 
         {/* Alertas */}
         {tieneAlertas && showAlertas && (
-          <div className="max-w-screen-xl mx-auto px-6 pt-4">
+          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-4">
             <div className="bg-red-50 border border-red-200 rounded-xl p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2">
@@ -120,15 +120,18 @@ export default function CalculatorClient() {
         )}
 
         {/* Toolbar */}
-        <div className="max-w-screen-xl mx-auto px-6 pt-4 pb-0 flex items-center justify-between flex-wrap gap-3">
-          <div className="text-xs text-espai-texto-suave">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-3 sm:pt-4 pb-0 flex items-center justify-between flex-wrap gap-2">
+          <div className="text-xs text-espai-texto-suave hidden sm:block">
             Euríbor 12M ({EURIBOR_MES}): <strong className="text-espai-naranja">{EURIBOR_ACTUAL.toFixed(3)}%</strong> ·
             Tipos fijos mercado: <strong>2,80% – 2,99%</strong>
             {tieneAlertas && !showAlertas && (
               <button onClick={() => setShowAlertas(true)} className="ml-3 text-red-500 font-semibold hover:underline">⚠ Ver alertas</button>
             )}
           </div>
-          <button onClick={() => window.print()} className="btn-primary text-sm">
+          {tieneAlertas && !showAlertas && (
+            <button onClick={() => setShowAlertas(true)} className="text-red-500 font-semibold text-xs hover:underline sm:hidden">⚠ Ver alertas</button>
+          )}
+          <button onClick={() => window.print()} className="btn-primary text-sm ml-auto">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -136,14 +139,14 @@ export default function CalculatorClient() {
           </button>
         </div>
 
-        <div className="max-w-screen-xl mx-auto px-6 py-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
 
           {/* COL IZQUIERDA */}
           <div className="space-y-4">
 
             <div className="card">
               <div className="card-title">Datos de la operación</div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="label">Precio vivienda (€)</label>
                   <input type="number" className="input-field" value={datos.precio} onChange={e => set('precio', n(e.target.value))} step={1000} />
@@ -189,7 +192,7 @@ export default function CalculatorClient() {
 
             <div className="card">
               <div className="card-title">Parámetros de la hipoteca</div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="label">Tipo de hipoteca</label>
                   <select className="input-field" value={datos.tipoHipoteca} onChange={e => set('tipoHipoteca', e.target.value as DatosCalculo['tipoHipoteca'])}>
@@ -276,7 +279,7 @@ export default function CalculatorClient() {
 
             <div className="card">
               <div className="card-title">Seguros vinculados (estimación)</div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="label">Seguro de vida (€/mes)</label>
                   <input type="number" className="input-field" value={datos.seguroVida} onChange={e => set('seguroVida', n(e.target.value))} />
@@ -339,9 +342,9 @@ export default function CalculatorClient() {
 
           {/* COL DERECHA */}
           <div className="space-y-4">
-            <div className="rounded-xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #002F4F, #293C5B)', borderLeft: '5px solid #f58134' }}>
+            <div className="rounded-xl p-4 sm:p-6 text-center" style={{ background: 'linear-gradient(135deg, #002F4F, #293C5B)', borderLeft: '5px solid #f58134' }}>
               <div className="text-[11px] uppercase tracking-widest text-white/60 mb-1">Cuota mensual hipoteca</div>
-              <div className="text-5xl font-bold text-espai-naranja my-2">{fmtCuota(resultado.cuota)}</div>
+              <div className="text-4xl sm:text-5xl font-bold text-espai-naranja my-2">{fmtCuota(resultado.cuota)}</div>
               {(datos.seguroVida || datos.seguroHogar) ? (
                 <div className="text-white/70 text-sm mt-1">
                   + seguros {fmtCuota((datos.seguroVida || 0) + (datos.seguroHogar || 0))} =

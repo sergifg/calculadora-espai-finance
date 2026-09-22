@@ -169,14 +169,31 @@ export const ESCENARIOS_EURIBOR = {
 }
 
 export const BANCOS_PRESET = [
-  { id: 'caixabank',  nombre: 'CaixaBank',        tipo: 'fija'     as const, tin: 2.80, plazo: 30, tae: 2.95, comision: 0 },
-  { id: 'bbva',       nombre: 'BBVA',              tipo: 'fija'     as const, tin: 2.85, plazo: 30, tae: 3.01, comision: 0 },
-  { id: 'ibercaja',   nombre: 'Ibercaja',          tipo: 'fija'     as const, tin: 2.90, plazo: 25, tae: 3.05, comision: 500 },
-  { id: 'march',      nombre: 'Banca March',       tipo: 'fija'     as const, tin: 2.99, plazo: 30, tae: 3.14, comision: 0 },
-  { id: 'kutxa',      nombre: 'Kutxabank',         tipo: 'variable' as const, dif: 0.49, plazo: 30, tae: 2.97, comision: 0 },
-  { id: 'sabadell_v', nombre: 'Sabadell Variable', tipo: 'variable' as const, dif: 0.55, plazo: 30, tae: 3.02, comision: 0 },
-  { id: 'sabadell_m', nombre: 'Sabadell Mixta 3a', tipo: 'mixta'    as const, tinFijo: 1.85, dif: 0.75, periodoFijo: 3,  plazo: 30, tae: 2.88, comision: 0 },
-  { id: 'pibank',     nombre: 'Pibank Mixta 4a',   tipo: 'mixta'    as const, tinFijo: 1.99, dif: 0.70, periodoFijo: 4,  plazo: 30, tae: 2.91, comision: 0 },
+  // Fijas
+  { id: 'caixabank',      nombre: 'CaixaBank',          tipo: 'fija'     as const, tin: 2.80, plazo: 30, tae: 2.95, comision: 0 },
+  { id: 'santander',      nombre: 'Santander',           tipo: 'fija'     as const, tin: 2.85, plazo: 30, tae: 3.00, comision: 0 },
+  { id: 'bbva',           nombre: 'BBVA',                tipo: 'fija'     as const, tin: 2.85, plazo: 30, tae: 3.01, comision: 0 },
+  { id: 'sabadell',       nombre: 'Sabadell',            tipo: 'fija'     as const, tin: 2.90, plazo: 30, tae: 3.04, comision: 0 },
+  { id: 'bankinter',      nombre: 'Bankinter',           tipo: 'fija'     as const, tin: 2.90, plazo: 30, tae: 3.05, comision: 0 },
+  { id: 'ibercaja',       nombre: 'Ibercaja',            tipo: 'fija'     as const, tin: 2.95, plazo: 30, tae: 3.10, comision: 0 },
+  { id: 'abanca',         nombre: 'Abanca',              tipo: 'fija'     as const, tin: 2.99, plazo: 30, tae: 3.14, comision: 0 },
+  { id: 'unicaja',        nombre: 'Unicaja Banco',       tipo: 'fija'     as const, tin: 3.00, plazo: 30, tae: 3.15, comision: 0 },
+  { id: 'deutsche',       nombre: 'Deutsche Bank',       tipo: 'fija'     as const, tin: 3.05, plazo: 30, tae: 3.20, comision: 0 },
+  // Variables
+  { id: 'openbank',       nombre: 'Openbank',            tipo: 'variable' as const, dif: 0.45, plazo: 30, tae: 2.92, comision: 0 },
+  { id: 'ing',            nombre: 'ING',                 tipo: 'variable' as const, dif: 0.49, plazo: 30, tae: 2.97, comision: 0 },
+  { id: 'kutxabank',      nombre: 'Kutxabank',           tipo: 'variable' as const, dif: 0.49, plazo: 30, tae: 2.97, comision: 0 },
+  { id: 'evo',            nombre: 'EVO Banco',           tipo: 'variable' as const, dif: 0.48, plazo: 30, tae: 2.95, comision: 0 },
+  { id: 'uci',            nombre: 'UCI',                 tipo: 'variable' as const, dif: 0.65, plazo: 30, tae: 3.12, comision: 0 },
+  { id: 'cajamar',        nombre: 'Cajamar',             tipo: 'variable' as const, dif: 0.55, plazo: 30, tae: 3.02, comision: 0 },
+  { id: 'triodos',        nombre: 'Triodos Bank',        tipo: 'variable' as const, dif: 0.59, plazo: 30, tae: 3.06, comision: 0 },
+  { id: 'targobank',      nombre: 'Targobank',           tipo: 'variable' as const, dif: 0.60, plazo: 30, tae: 3.07, comision: 0 },
+  { id: 'caixaenginyers', nombre: "Caixa d'Enginyers",  tipo: 'variable' as const, dif: 0.55, plazo: 30, tae: 3.02, comision: 0 },
+  // Mixtas
+  { id: 'sabadell_m',     nombre: 'Sabadell Mixta 3a',   tipo: 'mixta'   as const, tinFijo: 1.85, dif: 0.75, periodoFijo: 3,  plazo: 30, tae: 2.88, comision: 0 },
+  { id: 'bankinter_m',    nombre: 'Bankinter Mixta 5a',   tipo: 'mixta'   as const, tinFijo: 1.90, dif: 0.70, periodoFijo: 5,  plazo: 30, tae: 2.90, comision: 0 },
+  { id: 'caixabank_m',    nombre: 'CaixaBank Mixta 10a',  tipo: 'mixta'   as const, tinFijo: 2.10, dif: 0.65, periodoFijo: 10, plazo: 30, tae: 2.95, comision: 0 },
+  { id: 'caixaguissona',  nombre: 'Caixa Guissona Mixta', tipo: 'mixta'   as const, tinFijo: 2.00, dif: 0.60, periodoFijo: 5,  plazo: 30, tae: 2.89, comision: 0 },
 ] as const
 
 export function generarAmortizacion(hipoteca: number, tinAnual: number, plazoAnios: number) {

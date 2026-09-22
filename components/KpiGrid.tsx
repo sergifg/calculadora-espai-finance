@@ -71,7 +71,7 @@ export default function KpiGrid({ resultado, plazo }: Props) {
   ]
 
   return (
-    <div className="grid grid-cols-3 gap-2.5 mb-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 mb-4">
       {kpis.map((kpi) => {
         const c = colorMap[kpi.color]
         return (

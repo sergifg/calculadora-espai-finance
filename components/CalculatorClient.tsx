@@ -207,7 +207,7 @@ export default function CalculatorClient() {
                 {([
                   { key: 'compradores', label: 'Compradores', icon: '👤' },
                   { key: 'vivienda',    label: 'Vivienda',    icon: '🏠' },
-                  { key: 'gastos',      label: 'Gastos',      icon: '📋' },
+                  { key: 'gastos',      label: 'Operación',   icon: '📋' },
                 ] as const).map(tab => (
                   <button
                     key={tab.key}
@@ -374,15 +374,15 @@ export default function CalculatorClient() {
                   </>
                 )}
 
-                {/* ── TAB: GASTOS ── */}
+                {/* ── TAB: OPERACIÓN ── */}
                 {tabActivo === 'gastos' && (
                   <div className="space-y-2">
 
-                    {/* Aportación del comprador (antes en Vivienda) */}
+                    {/* Aportación del comprador */}
                     <div className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
                       <div>
                         <span className="text-sm text-gray-700 font-semibold">Aportación del comprador</span>
-                        <p className="text-[10px] text-gray-400">Fondos propios disponibles</p>
+                        <p className="text-[10px] text-gray-400">Fondos propios totales disponibles</p>
                       </div>
                       <input type="number" value={datos.fondos} onChange={e => set('fondos', n(e.target.value))} step={1000}
                         className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
@@ -392,7 +392,7 @@ export default function CalculatorClient() {
                     <div className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
                       <div>
                         <span className="text-sm text-gray-600">Arras ya pagadas</span>
-                        <p className="text-[10px] text-gray-400">Se descuenta de la liquidez necesaria</p>
+                        <p className="text-[10px] text-gray-400">Ya entregadas — se restan de lo que queda por aportar</p>
                       </div>
                       <input type="number" value={datos.arras ?? 0} onChange={e => set('arras', n(e.target.value))} step={500}
                         className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
@@ -436,6 +436,43 @@ export default function CalculatorClient() {
                       className="w-full py-2 rounded-lg font-semibold text-sm border-2 border-dashed border-espai-gris-borde text-espai-texto-suave hover:border-espai-naranja hover:text-espai-naranja transition-colors mt-1">
                       + Añadir gasto personalizado
                     </button>
+
+                    {/* Seguros */}
+                    <div className="pt-3 mt-1 border-t border-espai-gris-borde">
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-espai-texto-suave mb-2">Seguros vinculados (importe anual)</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="label">Seguro de vida (€/año)</label>
+                          <input type="number" className="input-field" value={Math.round((datos.seguroVida || 0) * 12)}
+                            onChange={e => set('seguroVida', Math.round(n(e.target.value) / 12 * 100) / 100)} />
+                          {datos.seguroVida > 0 && <p className="text-[10px] text-espai-naranja font-semibold mt-1">{datos.seguroVida.toFixed(2)} €/mes</p>}
+                        </div>
+                        <div>
+                          <label className="label">Seguro hogar (€/año)</label>
+                          <input type="number" className="input-field" value={Math.round((datos.seguroHogar || 0) * 12)}
+                            onChange={e => set('seguroHogar', Math.round(n(e.target.value) / 12 * 100) / 100)} />
+                          {datos.seguroHogar > 0 && <p className="text-[10px] text-espai-naranja font-semibold mt-1">{datos.seguroHogar.toFixed(2)} €/mes</p>}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Resumen aportación */}
+                    {(datos.arras ?? 0) > 0 && (
+                      <div className="bg-espai-gris rounded-lg p-3 space-y-1.5 mt-1">
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Fondos propios totales</span>
+                          <span className="font-semibold text-espai-azul">{fmt(datos.fondos)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>− Arras ya entregadas</span>
+                          <span className="font-semibold text-red-500">−{fmt(datos.arras ?? 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-bold text-espai-azul border-t border-espai-gris-borde pt-1.5">
+                          <span>Pendiente de aportar</span>
+                          <span>{fmt(Math.max(0, datos.fondos - (datos.arras ?? 0)))}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -529,18 +566,8 @@ export default function CalculatorClient() {
                 <div className="flex justify-between text-[10px] text-gray-400 mt-0.5"><span>5 años</span><span>35 años</span></div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-espai-gris-borde">
-                <div>
-                  <label className="label">Seguro de vida (€/mes)</label>
-                  <input type="number" className="input-field" value={datos.seguroVida} onChange={e => set('seguroVida', n(e.target.value))} />
-                </div>
-                <div>
-                  <label className="label">Seguro hogar (€/mes)</label>
-                  <input type="number" className="input-field" value={datos.seguroHogar} onChange={e => set('seguroHogar', n(e.target.value))} />
-                </div>
-              </div>
               {(datos.seguroVida > 0 || datos.seguroHogar > 0) && (
-                <div className="mt-3 bg-espai-gris rounded-lg p-3 text-sm flex justify-between items-center">
+                <div className="mt-0 pt-3 border-t border-espai-gris-borde bg-espai-gris rounded-lg p-3 text-sm flex justify-between items-center">
                   <span className="text-gray-500">Cuota hipoteca + seguros</span>
                   <span className="font-bold text-espai-naranja">{fmtCuota(resultado.cuotaTotal)}</span>
                 </div>

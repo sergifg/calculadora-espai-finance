@@ -74,7 +74,7 @@ export default function PdfView({ datos, resultado, nombreCliente, fecha }: Prop
           )}
         </div>
         <div className="pdf-cuota-params">
-          <span>{tipoLabel[datos.tipoHipoteca]} · {datos.tin}% TIN · {datos.plazo} años</span>
+          <span>{tipoLabel[datos.tipoHipoteca]} · {resultado.tinEfectivo.toFixed(2)}% TIN · {datos.plazo} años</span>
           <span>{fmt(resultado.hipoteca)} financiado · {ccaaNombre}</span>
           <span>{titularesResumen}</span>
         </div>

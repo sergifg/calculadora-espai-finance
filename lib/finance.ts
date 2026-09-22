@@ -36,6 +36,7 @@ export interface DatosCalculo {
 
 export interface ResultadoCalculo {
   hipoteca: number
+  tinEfectivo: number
   cuota: number
   cuotaTotal: number
   cuotaMixtaFija: number
@@ -122,7 +123,12 @@ export function calcular(datos: DatosCalculo): ResultadoCalculo {
     }
   }
 
-  const r = (datos.tin / 100) / 12
+  // Para variable y mixta el TIN de referencia es Euríbor + diferencial
+  const tinEfectivo = datos.tipoHipoteca === 'fija'
+    ? datos.tin
+    : datos.euribor + datos.diferencial
+
+  const r = (tinEfectivo / 100) / 12
   const n = datos.plazo * 12
   const cuota = pmt(r, n, hipoteca)
   const totalPagado = cuota * n
@@ -177,6 +183,7 @@ export function calcular(datos: DatosCalculo): ResultadoCalculo {
 
   return {
     hipoteca,
+    tinEfectivo,
     cuota,
     cuotaTotal,
     cuotaMixtaFija,

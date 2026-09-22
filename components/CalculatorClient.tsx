@@ -454,93 +454,145 @@ export default function CalculatorClient() {
             {/* Card hipoteca — siempre visible debajo de los tabs */}
             <div className="card mt-4">
               <div className="card-title">Parámetros de la hipoteca</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label className="label">Tipo de hipoteca</label>
-                  <select className="input-field" value={datos.tipoHipoteca} onChange={e => set('tipoHipoteca', e.target.value as DatosCalculo['tipoHipoteca'])}>
-                    <option value="fija">Fija</option>
-                    <option value="variable">Variable</option>
-                    <option value="mixta">Mixta</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label">TIN anual (%)</label>
-                  <input type="number" className="input-field" value={datos.tin} onChange={e => set('tin', n(e.target.value))} step={0.05} />
-                </div>
+
+              {/* Selector tipo — 3 botones visuales */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {([
+                  { val: 'fija',     label: 'Fija',     sub: 'TIN constante' },
+                  { val: 'variable', label: 'Variable', sub: 'Euríbor + diferencial' },
+                  { val: 'mixta',    label: 'Mixta',    sub: 'Fijo → Variable' },
+                ] as const).map(opt => (
+                  <button key={opt.val} onClick={() => set('tipoHipoteca', opt.val)}
+                    className={`rounded-xl p-2.5 text-center border-2 transition-all ${
+                      datos.tipoHipoteca === opt.val
+                        ? 'border-espai-naranja bg-orange-50'
+                        : 'border-espai-gris-borde bg-white hover:border-gray-300'
+                    }`}>
+                    <div className={`text-xs font-bold ${datos.tipoHipoteca === opt.val ? 'text-espai-naranja' : 'text-espai-azul'}`}>{opt.label}</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5 hidden sm:block">{opt.sub}</div>
+                  </button>
+                ))}
               </div>
 
-              {datos.tipoHipoteca !== 'fija' && (
-                <div className="grid grid-cols-2 gap-3 mb-3">
+              {/* ── FIJA ── */}
+              {datos.tipoHipoteca === 'fija' && (
+                <div className="grid grid-cols-2 gap-3 mb-4">
                   <div>
-                    <label className="label">Euríbor actual (%)</label>
-                    <input type="number" className="input-field" value={datos.euribor} onChange={e => set('euribor', n(e.target.value))} step={0.001} />
-                    <p className="text-[10px] text-gray-400 mt-1">Media {EURIBOR_MES}: {EURIBOR_ACTUAL.toFixed(3)}%</p>
+                    <label className="label">TIN anual (%)</label>
+                    <input type="number" className="input-field" value={datos.tin}
+                      onChange={e => set('tin', n(e.target.value))} step={0.05} />
+                    <p className="text-[10px] text-gray-400 mt-1">Tipo de interés nominal fijo</p>
                   </div>
-                  <div>
-                    <label className="label">Diferencial (%)</label>
-                    <input type="number" className="input-field" value={datos.diferencial} onChange={e => set('diferencial', n(e.target.value))} step={0.01} />
-                  </div>
-                </div>
-              )}
-
-              {datos.tipoHipoteca === 'mixta' && (
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div>
-                    <label className="label">Período fijo (años)</label>
-                    <input type="number" className="input-field" value={datos.periodoFijo} onChange={e => set('periodoFijo', n(e.target.value))} />
-                  </div>
-                  <div>
-                    <label className="label">TIN período fijo (%)</label>
-                    <input type="number" className="input-field" value={datos.tinFijo} onChange={e => set('tinFijo', n(e.target.value))} step={0.05} />
+                  <div className="bg-espai-gris rounded-xl p-3 flex flex-col justify-center">
+                    <div className="text-[10px] text-espai-texto-suave uppercase tracking-wider mb-1">Cuota mensual</div>
+                    <div className="text-xl font-bold text-espai-naranja">{fmtCuota(resultado.cuota)}</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">{datos.tin}% TIN · {datos.plazo} años</div>
                   </div>
                 </div>
               )}
 
+              {/* ── VARIABLE ── */}
               {datos.tipoHipoteca === 'variable' && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
-                  <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2">Escenarios Euríbor</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-center">
-                      <div className="text-[10px] text-green-600 font-semibold">Optimista {ESCENARIOS_EURIBOR.optimista.valor}%</div>
-                      <div className="font-bold text-green-700 text-sm">{fmtCuota(cuotaOptimista)}</div>
+                <>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label className="label">Euríbor 12M (%)</label>
+                      <input type="number" className="input-field" value={datos.euribor}
+                        onChange={e => set('euribor', n(e.target.value))} step={0.001} />
+                      <p className="text-[10px] text-gray-400 mt-1">Media {EURIBOR_MES}: {EURIBOR_ACTUAL.toFixed(3)}%</p>
                     </div>
-                    <div className="text-center border-x border-amber-200">
-                      <div className="text-[10px] text-amber-600 font-semibold">Actual {datos.euribor.toFixed(3)}%</div>
-                      <div className="font-bold text-amber-700 text-sm">{fmtCuota(resultado.cuota)}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-[10px] text-red-600 font-semibond">Pesimista {ESCENARIOS_EURIBOR.pesimista.valor}%</div>
-                      <div className="font-bold text-red-700 text-sm">{fmtCuota(cuotaPesimista)}</div>
+                    <div>
+                      <label className="label">Diferencial (%)</label>
+                      <input type="number" className="input-field" value={datos.diferencial}
+                        onChange={e => set('diferencial', n(e.target.value))} step={0.01} />
+                      <p className="text-[10px] text-espai-naranja font-semibold mt-1">
+                        TIN actual: {(datos.euribor + datos.diferencial).toFixed(3)}%
+                      </p>
                     </div>
                   </div>
-                </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+                    <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2.5">Escenarios Euríbor · cuota mensual estimada</p>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                        <div className="text-[10px] text-green-600 font-semibold mb-1">Optimista</div>
+                        <div className="font-bold text-green-700">{fmtCuota(cuotaOptimista)}</div>
+                        <div className="text-[10px] text-gray-400">Eur {ESCENARIOS_EURIBOR.optimista.valor}% +{datos.diferencial}%</div>
+                      </div>
+                      <div className="bg-amber-50 border border-amber-300 rounded-lg p-2">
+                        <div className="text-[10px] text-amber-600 font-semibold mb-1">Actual</div>
+                        <div className="font-bold text-amber-700">{fmtCuota(resultado.cuota)}</div>
+                        <div className="text-[10px] text-gray-400">Eur {datos.euribor.toFixed(3)}% +{datos.diferencial}%</div>
+                      </div>
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-2">
+                        <div className="text-[10px] text-red-600 font-semibold mb-1">Pesimista</div>
+                        <div className="font-bold text-red-700">{fmtCuota(cuotaPesimista)}</div>
+                        <div className="text-[10px] text-gray-400">Eur {ESCENARIOS_EURIBOR.pesimista.valor}% +{datos.diferencial}%</div>
+                      </div>
+                    </div>
+                  </div>
+                </>
               )}
 
+              {/* ── MIXTA ── */}
               {datos.tipoHipoteca === 'mixta' && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
-                  <p className="text-[10px] font-bold text-orange-700 uppercase tracking-wider mb-2">Dos períodos</p>
-                  <div className="grid grid-cols-2 gap-3">
+                <>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                      <div className="text-[10px] text-gray-500">Años 1–{datos.periodoFijo} ({datos.tinFijo}% fijo)</div>
-                      <div className="font-bold text-espai-azul">{fmtCuota(resultado.cuotaMixtaFija)}</div>
+                      <label className="label">TIN período fijo (%)</label>
+                      <input type="number" className="input-field" value={datos.tinFijo}
+                        onChange={e => set('tinFijo', n(e.target.value))} step={0.05} />
                     </div>
                     <div>
-                      <div className="text-[10px] text-gray-500">Años {datos.periodoFijo + 1}–{datos.plazo} (Eur+{datos.diferencial}%)</div>
-                      <div className="font-bold text-orange-700">{fmtCuota(resultado.cuotaMixtaVar)}</div>
+                      <label className="label">Duración período fijo (años)</label>
+                      <input type="number" className="input-field" value={datos.periodoFijo}
+                        onChange={e => set('periodoFijo', n(e.target.value))} min={1} max={datos.plazo - 1} />
+                    </div>
+                    <div>
+                      <label className="label">Euríbor 12M (%)</label>
+                      <input type="number" className="input-field" value={datos.euribor}
+                        onChange={e => set('euribor', n(e.target.value))} step={0.001} />
+                      <p className="text-[10px] text-gray-400 mt-1">Media {EURIBOR_MES}: {EURIBOR_ACTUAL.toFixed(3)}%</p>
+                    </div>
+                    <div>
+                      <label className="label">Diferencial (%)</label>
+                      <input type="number" className="input-field" value={datos.diferencial}
+                        onChange={e => set('diferencial', n(e.target.value))} step={0.01} />
+                      <p className="text-[10px] text-espai-naranja font-semibold mt-1">
+                        TIN variable: {(datos.euribor + datos.diferencial).toFixed(3)}%
+                      </p>
                     </div>
                   </div>
-                </div>
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 mb-3">
+                    <p className="text-[10px] font-bold text-orange-700 uppercase tracking-wider mb-2.5">Evolución de cuota</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white rounded-lg p-2.5 border border-orange-100">
+                        <div className="text-[10px] text-gray-500 mb-1">Años 1–{datos.periodoFijo} <span className="text-blue-600 font-semibold">({datos.tinFijo}% fijo)</span></div>
+                        <div className="font-bold text-espai-azul text-lg">{fmtCuota(resultado.cuotaMixtaFija)}</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-2.5 border border-orange-100">
+                        <div className="text-[10px] text-gray-500 mb-1">Años {datos.periodoFijo + 1}–{datos.plazo} <span className="text-orange-600 font-semibold">(Eur+{datos.diferencial}%)</span></div>
+                        <div className="font-bold text-orange-700 text-lg">{fmtCuota(resultado.cuotaMixtaVar)}</div>
+                      </div>
+                    </div>
+                  </div>
+                </>
               )}
 
+              {/* Plazo — siempre visible */}
               <div className="mb-3">
-                <label className="label">Plazo: <span className="text-espai-azul font-bold text-sm">{datos.plazo} años</span></label>
-                <input type="range" min={5} max={35} value={datos.plazo} onChange={e => set('plazo', parseInt(e.target.value))} className="w-full accent-espai-naranja cursor-pointer mt-1" />
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="label mb-0">Plazo</label>
+                  <span className="text-espai-azul font-bold text-sm">{datos.plazo} años</span>
+                </div>
+                <input type="range" min={5} max={35} value={datos.plazo}
+                  onChange={e => set('plazo', parseInt(e.target.value))}
+                  className="w-full accent-espai-naranja cursor-pointer" />
                 <div className="flex justify-between text-[10px] text-gray-400 mt-0.5"><span>5 años</span><span>35 años</span></div>
               </div>
 
               {(datos.seguroVida > 0 || datos.seguroHogar > 0) && (
-                <div className="mt-0 pt-3 border-t border-espai-gris-borde bg-espai-gris rounded-lg p-3 text-sm flex justify-between items-center">
-                  <span className="text-gray-500">Cuota hipoteca + seguros</span>
+                <div className="bg-espai-gris rounded-lg p-3 text-sm flex justify-between items-center border-t border-espai-gris-borde">
+                  <span className="text-gray-500">Cuota + seguros</span>
                   <span className="font-bold text-espai-naranja">{fmtCuota(resultado.cuotaTotal)}</span>
                 </div>
               )}
@@ -565,7 +617,7 @@ export default function CalculatorClient() {
                   <div className="text-right shrink-0">
                     <div className="text-white/40 text-[10px] uppercase tracking-wider">Hipoteca</div>
                     <div className="text-white font-bold text-lg">{fmt(resultado.hipoteca)}</div>
-                    <div className="text-white/40 text-[10px] mt-1">{datos.tin}% TIN · {datos.plazo}a</div>
+                    <div className="text-white/40 text-[10px] mt-1">{resultado.tinEfectivo.toFixed(2)}% TIN · {datos.plazo}a</div>
                   </div>
                 </div>
               </div>

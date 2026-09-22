@@ -6,6 +6,7 @@ import { fmt, fmtPct } from '@/lib/finance'
 interface Props {
   resultado: ResultadoCalculo | null
   plazo: number
+  ingresosMes?: number
 }
 
 type ColorKey = 'verde' | 'amarillo' | 'rojo' | 'neutral'
@@ -23,11 +24,12 @@ const colorMap = {
   neutral: { card: 'border-espai-gris-borde bg-white', value: 'text-espai-azul', dot: '' },
 }
 
-export default function KpiGrid({ resultado, plazo }: Props) {
+export default function KpiGrid({ resultado, plazo, ingresosMes }: Props) {
   if (!resultado) return null
 
+  const sinIngresos = (ingresosMes ?? resultado.ingresosValidos) === 0
   const ltvColor = semaforo(resultado.ltv, 80, 90)
-  const esfuerzoColor = semaforo(resultado.esfuerzoReal, 30, 35)
+  const esfuerzoColor = sinIngresos ? 'neutral' : semaforo(resultado.esfuerzoReal, 30, 35)
 
   const kpis = [
     {
@@ -45,10 +47,10 @@ export default function KpiGrid({ resultado, plazo }: Props) {
     },
     {
       label: 'Esfuerzo real',
-      value: fmtPct(resultado.esfuerzoReal),
-      sub: 'Cuota total / Ingresos válidos',
+      value: sinIngresos ? '—' : fmtPct(resultado.esfuerzoReal),
+      sub: sinIngresos ? 'Introduce ingresos' : 'Cuota total / Ingresos válidos',
       color: esfuerzoColor as ColorKey,
-      dot: true,
+      dot: !sinIngresos,
     },
     {
       label: 'Total intereses',

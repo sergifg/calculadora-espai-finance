@@ -38,6 +38,24 @@ const DEFAULTS: DatosCalculo = {
   seguroHogar: 25,
 }
 
+const STORAGE_KEY = 'espai_simulaciones'
+
+interface SimulacionGuardada {
+  id: string
+  nombre: string
+  fecha: string
+  datos: DatosCalculo
+  nombreCliente: string
+}
+
+function leerSimulaciones(): SimulacionGuardada[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') } catch { return [] }
+}
+
+function guardarSimulaciones(sims: SimulacionGuardada[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sims))
+}
+
 export default function CalculatorClient() {
   const [datos, setDatos] = useState<DatosCalculo>(DEFAULTS)
   const [nombreCliente, setNombreCliente] = useState('')
@@ -45,14 +63,46 @@ export default function CalculatorClient() {
   const [showAlertas, setShowAlertas] = useState(true)
   const [tabActivo, setTabActivo] = useState<'compradores' | 'vivienda' | 'gastos'>('compradores')
   const [fecha] = useState(() => new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }))
+  const [showSimPanel, setShowSimPanel] = useState(false)
+  const [simulaciones, setSimulaciones] = useState<SimulacionGuardada[]>([])
+  const [nombreSim, setNombreSim] = useState('')
 
   useEffect(() => {
+    setSimulaciones(leerSimulaciones())
     const stored = localStorage.getItem('espai_load_simulation')
     if (stored) {
       try { setDatos(prev => ({ ...prev, ...JSON.parse(stored) })) } catch {}
       localStorage.removeItem('espai_load_simulation')
     }
   }, [])
+
+  function handleGuardar() {
+    const nombre = nombreSim.trim() || (nombreCliente.trim() ? `${nombreCliente} · ${new Date().toLocaleDateString('es-ES')}` : `Simulación ${new Date().toLocaleDateString('es-ES')}`)
+    const nueva: SimulacionGuardada = {
+      id: Date.now().toString(),
+      nombre,
+      fecha: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      datos,
+      nombreCliente,
+    }
+    const actualizadas = [nueva, ...leerSimulaciones()]
+    guardarSimulaciones(actualizadas)
+    setSimulaciones(actualizadas)
+    setNombreSim('')
+    setShowSimPanel(false)
+  }
+
+  function handleCargar(sim: SimulacionGuardada) {
+    setDatos({ ...DEFAULTS, ...sim.datos })
+    setNombreCliente(sim.nombreCliente ?? '')
+    setShowSimPanel(false)
+  }
+
+  function handleEliminar(id: string) {
+    const actualizadas = leerSimulaciones().filter(s => s.id !== id)
+    guardarSimulaciones(actualizadas)
+    setSimulaciones(actualizadas)
+  }
 
   useEffect(() => {
     setResultado(calcular(datos))
@@ -185,13 +235,77 @@ export default function CalculatorClient() {
           {tieneAlertas && !showAlertas && (
             <button onClick={() => setShowAlertas(true)} className="text-red-500 font-semibold text-xs hover:underline sm:hidden">⚠ Ver alertas</button>
           )}
-          <button onClick={() => window.print()} className="btn-primary text-sm ml-auto">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span className="hidden sm:inline">Generar PDF</span>
-            <span className="sm:hidden">PDF</span>
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            {/* Botón guardar / panel simulaciones */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowSimPanel(p => !p); setSimulaciones(leerSimulaciones()) }}
+                className="flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-lg border border-espai-gris-borde text-espai-azul-mid hover:border-espai-naranja hover:text-espai-naranja transition-colors bg-white"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                <span className="hidden sm:inline">Simulaciones</span>
+                {simulaciones.length > 0 && (
+                  <span className="bg-espai-naranja text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{simulaciones.length}</span>
+                )}
+              </button>
+
+              {/* Panel desplegable */}
+              {showSimPanel && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowSimPanel(false)} />
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-espai-gris-borde rounded-xl shadow-xl z-50 overflow-hidden">
+                  {/* Guardar nueva */}
+                  <div className="p-3 border-b border-espai-gris-borde bg-gray-50">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-espai-texto-suave mb-2">Guardar simulación actual</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={nombreSim}
+                        onChange={e => setNombreSim(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleGuardar()}
+                        placeholder={nombreCliente.trim() ? `${nombreCliente}…` : 'Nombre de la simulación…'}
+                        className="flex-1 border border-espai-gris-borde rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-espai-naranja"
+                      />
+                      <button onClick={handleGuardar} className="bg-espai-naranja text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap">
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lista simulaciones guardadas */}
+                  {simulaciones.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-espai-texto-suave">No hay simulaciones guardadas</div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto">
+                      {simulaciones.map(sim => (
+                        <div key={sim.id} className="flex items-center gap-2 px-3 py-2.5 border-b border-espai-gris-borde hover:bg-gray-50 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-semibold text-espai-azul truncate">{sim.nombre}</div>
+                            <div className="text-[10px] text-espai-texto-suave">{sim.fecha}</div>
+                          </div>
+                          <button onClick={() => handleCargar(sim)} className="text-[10px] font-bold text-espai-azul-mid border border-espai-gris-borde rounded px-2 py-1 hover:border-espai-naranja hover:text-espai-naranja transition-colors whitespace-nowrap">
+                            Cargar
+                          </button>
+                          <button onClick={() => handleEliminar(sim.id)} className="text-gray-300 hover:text-red-400 transition-colors text-sm font-bold">✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                </>
+              )}
+            </div>
+
+            <button onClick={() => window.print()} className="btn-primary text-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="hidden sm:inline">Generar PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </button>
+          </div>
         </div>
 
         {/* Layout principal: en mobile las columnas se apilan, col derecha sube (order) */}
@@ -679,37 +793,32 @@ export default function CalculatorClient() {
 
                 {/* ── MIXTA ── */}
                 {datos.tipoHipoteca === 'mixta' && (
-                  <>
-                    <div className="flex items-start justify-between gap-3 mb-4">
-                      <div>
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Hipoteca mixta</div>
-                        <div className="text-white font-bold text-lg">{fmt(resultado.hipoteca)}</div>
-                        <div className="text-white/40 text-[10px] mt-0.5">{datos.plazo} años · {datos.periodoFijo}a fijo + {datos.plazo - datos.periodoFijo}a variable</div>
-                      </div>
-                      {(datos.seguroVida || datos.seguroHogar) && (
-                        <div className="text-right shrink-0">
-                          <div className="text-white/40 text-[10px]">+ seguros</div>
-                          <div className="text-espai-naranja font-bold">{fmtCuota(resultado.cuotaTotal)}</div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] uppercase tracking-widest text-white/60 mb-2">Cuota mensual · mixta</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-white/10 rounded-xl p-2.5">
+                          <div className="text-[10px] text-blue-300 font-semibold mb-1">Años 1–{datos.periodoFijo} <span className="text-white/40">({datos.tinFijo}% fijo)</span></div>
+                          <div className="text-2xl sm:text-3xl font-bold text-white leading-none">{fmtCuota(resultado.cuotaMixtaFija)}</div>
                         </div>
-                      )}
+                        <div className="bg-espai-naranja/20 border border-espai-naranja/30 rounded-xl p-2.5">
+                          <div className="text-[10px] text-espai-naranja font-semibold mb-1">Años {datos.periodoFijo + 1}–{datos.plazo} <span className="text-white/40">(Eur+{datos.diferencial}%)</span></div>
+                          <div className="text-2xl sm:text-3xl font-bold text-espai-naranja leading-none">{fmtCuota(resultado.cuotaMixtaVar)}</div>
+                        </div>
+                      </div>
+                      {(datos.seguroVida || datos.seguroHogar) ? (
+                        <div className="text-white/40 text-xs mt-1.5">
+                          + seguros {fmtCuota((datos.seguroVida || 0) + (datos.seguroHogar || 0))} =
+                          <span className="text-white/70 font-bold ml-1">{fmtCuota(resultado.cuotaTotal)}</span>
+                        </div>
+                      ) : null}
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/10 rounded-xl p-3">
-                        <div className="text-[10px] text-blue-300 font-semibold uppercase tracking-wider mb-1.5">
-                          Años 1–{datos.periodoFijo} · Fijo
-                        </div>
-                        <div className="text-3xl font-bold text-white">{fmtCuota(resultado.cuotaMixtaFija)}</div>
-                        <div className="text-white/40 text-[10px] mt-1">{datos.tinFijo}% TIN fijo</div>
-                      </div>
-                      <div className="bg-espai-naranja/15 border border-espai-naranja/25 rounded-xl p-3">
-                        <div className="text-[10px] text-espai-naranja font-semibold uppercase tracking-wider mb-1.5">
-                          Años {datos.periodoFijo + 1}–{datos.plazo} · Variable
-                        </div>
-                        <div className="text-3xl font-bold text-espai-naranja">{fmtCuota(resultado.cuotaMixtaVar)}</div>
-                        <div className="text-white/40 text-[10px] mt-1">Eur+{datos.diferencial}% = {resultado.tinEfectivo.toFixed(2)}%</div>
-                      </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-white/40 text-[10px] uppercase tracking-wider">Hipoteca</div>
+                      <div className="text-white font-bold text-lg">{fmt(resultado.hipoteca)}</div>
+                      <div className="text-white/40 text-[10px] mt-1">{datos.plazo}a · {datos.periodoFijo}a fijo</div>
                     </div>
-                  </>
+                  </div>
                 )}
 
               </div>
@@ -718,15 +827,21 @@ export default function CalculatorClient() {
               <div className="px-4 sm:px-6 pb-4">
                 <div className="flex items-center justify-between text-[10px] text-white/40 mb-1">
                   <span>Esfuerzo mensual</span>
-                  <span className={resultado.esfuerzoReal > 35 ? 'text-red-400 font-bold' : resultado.esfuerzoReal > 30 ? 'text-amber-400 font-bold' : 'text-green-400 font-bold'}>
-                    {resultado.esfuerzoReal.toFixed(1)}%
-                  </span>
+                  {resultado.ingresosValidos === 0 ? (
+                    <span className="text-white/30 italic">Sin datos de ingresos</span>
+                  ) : (
+                    <span className={resultado.esfuerzoReal > 35 ? 'text-red-400 font-bold' : resultado.esfuerzoReal > 30 ? 'text-amber-400 font-bold' : 'text-green-400 font-bold'}>
+                      {resultado.esfuerzoReal.toFixed(1)}%
+                    </span>
+                  )}
                 </div>
                 <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${resultado.esfuerzoReal > 35 ? 'bg-red-400' : resultado.esfuerzoReal > 30 ? 'bg-amber-400' : 'bg-green-400'}`}
-                    style={{ width: `${Math.min(resultado.esfuerzoReal, 50) * 2}%` }}
-                  />
+                  {resultado.ingresosValidos > 0 && (
+                    <div
+                      className={`h-full rounded-full transition-all ${resultado.esfuerzoReal > 35 ? 'bg-red-400' : resultado.esfuerzoReal > 30 ? 'bg-amber-400' : 'bg-green-400'}`}
+                      style={{ width: `${Math.min(resultado.esfuerzoReal, 50) * 2}%` }}
+                    />
+                  )}
                 </div>
               </div>
               {/* Hint mobile */}
@@ -736,7 +851,7 @@ export default function CalculatorClient() {
             </div>}
 
             {datos.precio > 0 && <>
-              <KpiGrid resultado={resultado} plazo={datos.plazo} />
+              <KpiGrid resultado={resultado} plazo={datos.plazo} ingresosMes={resultado.ingresosValidos} />
               <BankTable hipoteca={resultado.hipoteca} ingresosMes={resultado.ingresosValidos} euribor={datos.euribor} currentTin={datos.tin} />
               <AmortTable hipoteca={resultado.hipoteca} tin={datos.tin} plazo={datos.plazo} />
             </>}

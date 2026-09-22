@@ -7,17 +7,17 @@ import BankTable from '@/components/BankTable'
 import AmortTable from '@/components/AmortTable'
 import PdfView from '@/components/PdfView'
 import {
-  calcular, fmt, fmtCuota, DatosCalculo, ResultadoCalculo,
-  ITP_POR_CCAA, EURIBOR_ACTUAL, EURIBOR_MES, ESCENARIOS_EURIBOR, pmt
+  calcular, fmt, fmtCuota, DatosCalculo, ResultadoCalculo, Titular,
+  ITP_POR_CCAA, EURIBOR_ACTUAL, EURIBOR_MES, ESCENARIOS_EURIBOR, pmt, brutoAnualANetoMensual
 } from '@/lib/finance'
 
 const DEFAULTS: DatosCalculo = {
   precio: 370000,
   precioEscrituracion: 370000,
   fondos: 40000,
-  ingresos1: 3500,
-  ingresos2: 2415,
-  tipoIngresos: 'fijo',
+  titulares: [
+    { nombre: 'Titular 1', brutoAnual: 42000, tipoContrato: 'fijo' }
+  ],
   tin: 2.80,
   plazo: 30,
   tipoHipoteca: 'fija',
@@ -65,6 +65,33 @@ export default function CalculatorClient() {
   function handleCcaaChange(ccaa: string) {
     const itp = ITP_POR_CCAA[ccaa]?.pct ?? 8
     setDatos(prev => ({ ...prev, ccaa, itp_pct: itp }))
+  }
+
+  function addTitular() {
+    if (datos.titulares.length < 3) {
+      setDatos(prev => ({
+        ...prev,
+        titulares: [...prev.titulares, { nombre: `Titular ${prev.titulares.length + 1}`, brutoAnual: 30000, tipoContrato: 'fijo' }]
+      }))
+    }
+  }
+
+  function removeTitular(idx: number) {
+    if (datos.titulares.length > 1) {
+      setDatos(prev => ({
+        ...prev,
+        titulares: prev.titulares.filter((_, i) => i !== idx)
+      }))
+    }
+  }
+
+  function updateTitular(idx: number, field: keyof Titular, value: string | number) {
+    setDatos(prev => ({
+      ...prev,
+      titulares: prev.titulares.map((t, i) =>
+        i === idx ? { ...t, [field]: value } : t
+      )
+    }))
   }
 
   if (!resultado) return null
@@ -150,7 +177,7 @@ export default function CalculatorClient() {
 
             <div className="card">
               <div className="card-title">Datos de la operación</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="label">Precio vivienda (€)</label>
                   <input type="number" className="input-field" value={datos.precio} onChange={e => set('precio', n(e.target.value))} step={1000} />
@@ -164,33 +191,93 @@ export default function CalculatorClient() {
                   <label className="label">Fondos propios (€)</label>
                   <input type="number" className="input-field" value={datos.fondos} onChange={e => set('fondos', n(e.target.value))} step={1000} />
                 </div>
-                <div>
-                  <label className="label">LTV real (%)</label>
-                  <input type="number" className="input-field" value={datos.precio > 0 ? Math.round((resultado.hipoteca / datos.precio) * 100) : 0} disabled />
-                  <p className={`text-[10px] mt-1 ${resultado.ltv > 80 ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
-                    {resultado.ltv > 80 ? '⚠ Supera 80% — requiere aval' : 'Máx. 80% sin aval'}
-                  </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Capital hipoteca</span>
+                  <span className="font-semibold text-espai-azul">{fmt(resultado.hipoteca)}</span>
                 </div>
-                <div>
-                  <label className="label">Ingresos titular 1 (€/mes)</label>
-                  <input type="number" className="input-field" value={datos.ingresos1} onChange={e => set('ingresos1', n(e.target.value))} />
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-gray-600">LTV</span>
+                  <span className={`font-semibold px-2 py-0.5 rounded ${resultado.ltv > 80 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                    {resultado.ltv.toFixed(1)}% {resultado.ltv > 80 ? '⚠ >80%' : '✓'}
+                  </span>
                 </div>
-                <div>
-                  <label className="label">Ingresos titular 2 (€/mes)</label>
-                  <input type="number" className="input-field" value={datos.ingresos2} onChange={e => set('ingresos2', n(e.target.value))} />
-                </div>
-                <div className="col-span-2">
-                  <label className="label">Tipo de contrato</label>
-                  <select className="input-field" value={datos.tipoIngresos} onChange={e => set('tipoIngresos', e.target.value)}>
-                    <option value="fijo">Asalariado contrato fijo (100% ingresos)</option>
-                    <option value="autonomo">Autónomo (85% — requiere 2 últimas declaraciones IRPF)</option>
-                    <option value="temporal">Contrato temporal / obra (75%)</option>
-                    <option value="pensionista">Pensionista (100%)</option>
-                  </select>
-                  {datos.tipoIngresos !== 'fijo' && (
-                    <p className="text-[10px] text-amber-600 mt-1">Ingresos válidos banco: {fmt(resultado.ingresosValidos)}/mes</p>
-                  )}
-                </div>
+              </div>
+
+              <div className="space-y-3 mb-3">
+                {datos.titulares.map((titular, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="font-semibold text-sm text-gray-700">Titular {idx + 1}</div>
+                      {datos.titulares.length > 1 && (
+                        <button
+                          onClick={() => removeTitular(idx)}
+                          className="text-red-500 hover:text-red-700 text-lg leading-none"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="label text-xs">Nombre (opcional)</label>
+                        <input
+                          type="text"
+                          className="input-field text-sm"
+                          placeholder="Nombre opcional"
+                          value={titular.nombre}
+                          onChange={e => updateTitular(idx, 'nombre', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="label text-xs">Salario bruto anual (€)</label>
+                        <input
+                          type="number"
+                          className="input-field text-sm"
+                          value={titular.brutoAnual}
+                          onChange={e => updateTitular(idx, 'brutoAnual', n(e.target.value))}
+                          step={1000}
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">
+                          ≈ {fmt(brutoAnualANetoMensual(titular.brutoAnual))}/mes netos
+                        </p>
+                      </div>
+                      <div>
+                        <label className="label text-xs">Tipo de contrato</label>
+                        <select
+                          className="input-field text-sm"
+                          value={titular.tipoContrato}
+                          onChange={e => updateTitular(idx, 'tipoContrato', e.target.value)}
+                        >
+                          <option value="fijo">Asalariado / Contrato fijo (100%)</option>
+                          <option value="autonomo">Autónomo — RETA (85% ingresos)</option>
+                          <option value="temporal">Temporal / Obra y servicio (75%)</option>
+                          <option value="pensionista">Pensionista (100%)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={addTitular}
+                disabled={datos.titulares.length >= 3}
+                className={`w-full py-2 px-3 rounded-lg font-semibold text-sm transition-colors ${
+                  datos.titulares.length >= 3
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-espai-naranja text-white hover:bg-orange-600'
+                }`}
+              >
+                + Añadir titular
+              </button>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
+                <p className="text-sm font-semibold text-amber-900">
+                  Ingresos válidos banco: <span className="text-amber-700">{fmt(resultado.ingresosValidos)}/mes</span>
+                </p>
               </div>
             </div>
 
@@ -387,7 +474,7 @@ export default function CalculatorClient() {
               </div>
             </div>
             <KpiGrid resultado={resultado} plazo={datos.plazo} />
-            <BankTable hipoteca={resultado.hipoteca} ingresosMes={datos.ingresos1 + datos.ingresos2} euribor={datos.euribor} currentTin={datos.tin} />
+            <BankTable hipoteca={resultado.hipoteca} ingresosMes={resultado.ingresosValidos} euribor={datos.euribor} currentTin={datos.tin} />
             <AmortTable hipoteca={resultado.hipoteca} tin={datos.tin} plazo={datos.plazo} />
           </div>
         </div>

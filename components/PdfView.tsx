@@ -1,6 +1,6 @@
 'use client'
 
-import { DatosCalculo, ResultadoCalculo, fmt, fmtPct, fmtCuota, ITP_POR_CCAA, EURIBOR_ACTUAL, EURIBOR_MES, BANCOS_PRESET, pmt } from '@/lib/finance'
+import { DatosCalculo, ResultadoCalculo, fmt, fmtPct, fmtCuota, ITP_POR_CCAA, EURIBOR_ACTUAL, EURIBOR_MES, BANCOS_PRESET, pmt, brutoAnualANetoMensual } from '@/lib/finance'
 
 interface Props {
   datos: DatosCalculo
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function PdfView({ datos, resultado, nombreCliente, fecha }: Props) {
-  const ingresosMes = datos.ingresos1 + datos.ingresos2
+  const ingresosMes = datos.titulares.reduce((sum, t) => sum + brutoAnualANetoMensual(t.brutoAnual), 0)
   const ccaaNombre = ITP_POR_CCAA[datos.ccaa]?.nombre ?? datos.ccaa
 
   const tipoLabel: Record<string, string> = {
@@ -19,6 +19,10 @@ export default function PdfView({ datos, resultado, nombreCliente, fecha }: Prop
   const contratoLabel: Record<string, string> = {
     fijo: 'Asalariado fijo', autonomo: 'Autónomo', temporal: 'Temporal', pensionista: 'Pensionista'
   }
+
+  const titularesResumen = datos.titulares.length === 1
+    ? `${datos.titulares[0].nombre || 'Titular'}: ${fmt(brutoAnualANetoMensual(datos.titulares[0].brutoAnual))}/mes netos (bruto: ${fmt(datos.titulares[0].brutoAnual)}/año)`
+    : `${datos.titulares.length} titulares · Ingresos válidos: ${fmt(resultado.ingresosValidos)}/mes`
 
   const kpis = [
     { label: 'Capital hipoteca', value: fmt(resultado.hipoteca) },
@@ -72,7 +76,7 @@ export default function PdfView({ datos, resultado, nombreCliente, fecha }: Prop
         <div className="pdf-cuota-params">
           <span>{tipoLabel[datos.tipoHipoteca]} · {datos.tin}% TIN · {datos.plazo} años</span>
           <span>{fmt(resultado.hipoteca)} financiado · {ccaaNombre}</span>
-          <span>Ingresos: {fmt(ingresosMes)}/mes · {contratoLabel[datos.tipoIngresos]}</span>
+          <span>{titularesResumen}</span>
         </div>
       </div>
 

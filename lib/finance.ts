@@ -1,10 +1,14 @@
+export interface Titular {
+  nombre: string
+  brutoAnual: number
+  tipoContrato: 'fijo' | 'autonomo' | 'temporal' | 'pensionista'
+}
+
 export interface DatosCalculo {
   precio: number
   precioEscrituracion: number
   fondos: number
-  ingresos1: number
-  ingresos2: number
-  tipoIngresos: 'fijo' | 'autonomo' | 'temporal' | 'pensionista'
+  titulares: Titular[]
   tin: number
   plazo: number
   tipoHipoteca: 'fija' | 'variable' | 'mixta'
@@ -74,6 +78,19 @@ export const ITP_POR_CCAA: Record<string, { nombre: string; pct: number }> = {
   canarias:    { nombre: 'Canarias',           pct: 6.5},
 }
 
+export function brutoAnualANetoMensual(bruto: number): number {
+  const ss = bruto * 0.0635
+  const baseIrpf = bruto - ss
+  let irpf = 0
+  if (baseIrpf <= 12450) irpf = baseIrpf * 0.19
+  else if (baseIrpf <= 20200) irpf = 12450 * 0.19 + (baseIrpf - 12450) * 0.24
+  else if (baseIrpf <= 35200) irpf = 12450 * 0.19 + 7750 * 0.24 + (baseIrpf - 20200) * 0.30
+  else if (baseIrpf <= 60000) irpf = 12450 * 0.19 + 7750 * 0.24 + 15000 * 0.30 + (baseIrpf - 35200) * 0.37
+  else if (baseIrpf <= 300000) irpf = 12450 * 0.19 + 7750 * 0.24 + 15000 * 0.30 + 24800 * 0.37 + (baseIrpf - 60000) * 0.45
+  else irpf = 12450 * 0.19 + 7750 * 0.24 + 15000 * 0.30 + 24800 * 0.37 + 240000 * 0.45 + (baseIrpf - 300000) * 0.47
+  return Math.max(0, (bruto - ss - irpf) / 12)
+}
+
 export function pmt(r: number, n: number, P: number): number {
   if (r === 0) return P / n
   return (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1)
@@ -81,9 +98,23 @@ export function pmt(r: number, n: number, P: number): number {
 
 export function calcular(datos: DatosCalculo): ResultadoCalculo {
   const hipoteca = Math.max(0, datos.precio - datos.fondos)
-  const coefIngresos = COEF_INGRESOS[datos.tipoIngresos] ?? 1.0
-  const ingresosValidos = (datos.ingresos1 + datos.ingresos2) * coefIngresos
-  const ingresosBrutos = datos.ingresos1 + datos.ingresos2
+
+  // Calcular ingresos por titular
+  let ingresosValidos = 0
+  let ingresosBrutos = 0
+  const alertasAutonomo: string[] = []
+
+  for (const titular of datos.titulares) {
+    const netoMensual = brutoAnualANetoMensual(titular.brutoAnual)
+    const coef = COEF_INGRESOS[titular.tipoContrato] ?? 1.0
+    const ingresoValidoTitular = netoMensual * coef
+    ingresosValidos += ingresoValidoTitular
+    ingresosBrutos += netoMensual
+
+    if (titular.tipoContrato === 'autonomo') {
+      alertasAutonomo.push(`${titular.nombre}: banco computará aprox. ${Math.round(coef * 100)}% de los ingresos declarados. Necesitarás 2 últimas declaraciones de IRPF.`)
+    }
+  }
 
   const r = (datos.tin / 100) / 12
   const n = datos.plazo * 12
@@ -132,8 +163,9 @@ export function calcular(datos: DatosCalculo): ResultadoCalculo {
     alertaRegulatorio.push(`LTV ${ltv.toFixed(1)}% supera el 80%. Requiere aval público (ICO/comunidad autónoma) o segunda garantía.`)
   if (datos.plazo > 30 && datos.precio < 250000)
     alertaRegulatorio.push(`Plazo de ${datos.plazo} años puede ser rechazado para este importe. Los bancos suelen limitar a 25-30 años para hipotecas < 250.000€.`)
-  if (datos.tipoIngresos === 'autonomo')
-    alertaRegulatorio.push(`Titular autónomo: banco computará aprox. ${Math.round(coefIngresos * 100)}% de los ingresos declarados. Necesitarás 2 últimas declaraciones de IRPF.`)
+
+  // Añadir alertas autónomo
+  alertaRegulatorio.push(...alertasAutonomo)
 
   return {
     hipoteca,

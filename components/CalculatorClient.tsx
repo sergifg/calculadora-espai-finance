@@ -12,14 +12,14 @@ import {
 } from '@/lib/finance'
 
 const DEFAULTS: DatosCalculo = {
-  precio: 370000,
-  precioEscrituracion: 370000,
-  fondos: 40000,
+  precio: 0,
+  precioEscrituracion: 0,
+  fondos: 0,
   tipoVivienda: 'primera',
   ccaa: 'cataluna',
   itp_pct: ITP_POR_CCAA['cataluna'].pct,
   titulares: [
-    { nombre: 'Titular 1', brutoAnual: 42000, tipoContrato: 'fijo' }
+    { nombre: '', brutoAnual: 0, tipoContrato: 'fijo' }
   ],
   tin: 2.80,
   plazo: 30,

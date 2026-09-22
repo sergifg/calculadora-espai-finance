@@ -15,6 +15,9 @@ const DEFAULTS: DatosCalculo = {
   precio: 370000,
   precioEscrituracion: 370000,
   fondos: 40000,
+  tipoVivienda: 'primera',
+  ccaa: 'cataluna',
+  itp_pct: ITP_POR_CCAA['cataluna'].pct,
   titulares: [
     { nombre: 'Titular 1', brutoAnual: 42000, tipoContrato: 'fijo' }
   ],
@@ -25,8 +28,6 @@ const DEFAULTS: DatosCalculo = {
   diferencial: 0.49,
   tinFijo: 1.85,
   periodoFijo: 3,
-  ccaa: 'cataluna',
-  itp_pct: ITP_POR_CCAA['cataluna'].pct,
   gasto_tasacion: 700,
   gasto_notaria: 1200,
   gasto_registro: 400,
@@ -42,6 +43,7 @@ export default function CalculatorClient() {
   const [nombreCliente, setNombreCliente] = useState('')
   const [resultado, setResultado] = useState<ResultadoCalculo | null>(null)
   const [showAlertas, setShowAlertas] = useState(true)
+  const [tabActivo, setTabActivo] = useState<'compradores' | 'vivienda' | 'gastos'>('compradores')
   const [fecha] = useState(() => new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }))
 
   useEffect(() => {
@@ -172,116 +174,234 @@ export default function CalculatorClient() {
         {/* Layout principal: en mobile las columnas se apilan, col derecha sube (order) */}
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-4 flex flex-col xl:grid xl:grid-cols-2 gap-4">
 
-          {/* COL IZQUIERDA — formularios (en mobile va debajo, order-2) */}
-          <div className="space-y-4 order-2 xl:order-1">
+          {/* COL IZQUIERDA — formularios con tabs (en mobile va debajo, order-2) */}
+          <div className="order-2 xl:order-1">
+            <div className="card p-0 overflow-hidden">
 
-            <div className="card">
-              <div className="card-title">Datos de la operación</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label className="label">Precio vivienda (€)</label>
-                  <input type="number" className="input-field" value={datos.precio} onChange={e => set('precio', n(e.target.value))} step={1000} />
-                </div>
-                <div>
-                  <label className="label">Precio escrituración (€)</label>
-                  <input type="number" className="input-field" value={datos.precioEscrituracion} onChange={e => set('precioEscrituracion', n(e.target.value))} step={1000} />
-                  <p className="text-[10px] text-gray-400 mt-1">Base para calcular ITP</p>
-                </div>
-                <div>
-                  <label className="label">Fondos propios (€)</label>
-                  <input type="number" className="input-field" value={datos.fondos} onChange={e => set('fondos', n(e.target.value))} step={1000} />
-                </div>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Capital hipoteca</span>
-                  <span className="font-semibold text-espai-azul">{fmt(resultado.hipoteca)}</span>
-                </div>
-                <div className="flex justify-between text-sm mt-1">
-                  <span className="text-gray-600">LTV</span>
-                  <span className={`font-semibold px-2 py-0.5 rounded ${resultado.ltv > 80 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                    {resultado.ltv.toFixed(1)}% {resultado.ltv > 80 ? '⚠ >80%' : '✓'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-3">
-                {datos.titulares.map((titular, idx) => (
-                  <div key={idx} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="font-semibold text-sm text-gray-700">Titular {idx + 1}</div>
-                      {datos.titulares.length > 1 && (
-                        <button
-                          onClick={() => removeTitular(idx)}
-                          className="text-red-500 hover:text-red-700 text-lg leading-none"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <label className="label text-xs">Nombre (opcional)</label>
-                        <input
-                          type="text"
-                          className="input-field text-sm"
-                          placeholder="Nombre opcional"
-                          value={titular.nombre}
-                          onChange={e => updateTitular(idx, 'nombre', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="label text-xs">Salario bruto anual (€)</label>
-                        <input
-                          type="number"
-                          className="input-field text-sm"
-                          value={titular.brutoAnual}
-                          onChange={e => updateTitular(idx, 'brutoAnual', n(e.target.value))}
-                          step={1000}
-                        />
-                        <p className="text-[10px] text-gray-500 mt-1">
-                          ≈ {fmt(brutoAnualANetoMensual(titular.brutoAnual))}/mes netos
-                        </p>
-                      </div>
-                      <div>
-                        <label className="label text-xs">Tipo de contrato</label>
-                        <select
-                          className="input-field text-sm"
-                          value={titular.tipoContrato}
-                          onChange={e => updateTitular(idx, 'tipoContrato', e.target.value)}
-                        >
-                          <option value="fijo">Asalariado / Contrato fijo (100%)</option>
-                          <option value="autonomo">Autónomo — RETA (85% ingresos)</option>
-                          <option value="temporal">Temporal / Obra y servicio (75%)</option>
-                          <option value="pensionista">Pensionista (100%)</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
+              {/* Tabs */}
+              <div className="flex border-b border-espai-gris-borde">
+                {([
+                  { key: 'compradores', label: 'Compradores', icon: '👤' },
+                  { key: 'vivienda',    label: 'Vivienda',    icon: '🏠' },
+                  { key: 'gastos',      label: 'Gastos',      icon: '📋' },
+                ] as const).map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setTabActivo(tab.key)}
+                    className={`flex-1 py-3 px-2 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 -mb-px ${
+                      tabActivo === tab.key
+                        ? 'border-espai-naranja text-espai-naranja bg-white'
+                        : 'border-transparent text-espai-texto-suave hover:text-espai-azul bg-gray-50'
+                    }`}
+                  >
+                    <span className="sm:hidden">{tab.icon}</span>
+                    <span className="hidden sm:inline">{tab.icon} {tab.label}</span>
+                  </button>
                 ))}
               </div>
 
-              <button
-                onClick={addTitular}
-                disabled={datos.titulares.length >= 3}
-                className={`w-full py-2 px-3 rounded-lg font-semibold text-sm transition-colors ${
-                  datos.titulares.length >= 3
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-espai-naranja text-white hover:bg-orange-600'
-                }`}
-              >
-                + Añadir titular
-              </button>
+              <div className="p-4 sm:p-5 space-y-4">
 
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
-                <p className="text-sm font-semibold text-amber-900">
-                  Ingresos válidos banco: <span className="text-amber-700">{fmt(resultado.ingresosValidos)}/mes</span>
-                </p>
+                {/* ── TAB: COMPRADORES ── */}
+                {tabActivo === 'compradores' && (
+                  <>
+                    <div className="space-y-3">
+                      {datos.titulares.map((titular, idx) => (
+                        <div key={idx} className="bg-gray-50 rounded-xl p-3.5 border border-gray-200">
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-espai-naranja">
+                              Titular {idx + 1}
+                            </span>
+                            {datos.titulares.length > 1 && (
+                              <button onClick={() => removeTitular(idx)} className="text-xs text-gray-400 hover:text-red-500 transition-colors font-semibold">
+                                Eliminar ✕
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div className="sm:col-span-2">
+                              <label className="label">Nombre (opcional)</label>
+                              <input type="text" className="input-field" placeholder="Ej: María García"
+                                value={titular.nombre} onChange={e => updateTitular(idx, 'nombre', e.target.value)} />
+                            </div>
+                            <div>
+                              <label className="label">Salario bruto anual (€)</label>
+                              <input type="number" className="input-field" value={titular.brutoAnual}
+                                onChange={e => updateTitular(idx, 'brutoAnual', n(e.target.value))} step={1000} />
+                              <p className="text-[10px] text-espai-naranja font-semibold mt-1">
+                                ≈ {fmt(brutoAnualANetoMensual(titular.brutoAnual))}/mes netos
+                              </p>
+                            </div>
+                            <div>
+                              <label className="label">Tipo de contrato</label>
+                              <select className="input-field" value={titular.tipoContrato}
+                                onChange={e => updateTitular(idx, 'tipoContrato', e.target.value)}>
+                                <option value="fijo">Contrato fijo (100%)</option>
+                                <option value="autonomo">Autónomo — RETA (85%)</option>
+                                <option value="temporal">Temporal / obra (75%)</option>
+                                <option value="pensionista">Pensionista (100%)</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button onClick={addTitular} disabled={datos.titulares.length >= 3}
+                      className={`w-full py-2.5 rounded-lg font-semibold text-sm border-2 border-dashed transition-colors ${
+                        datos.titulares.length >= 3
+                          ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                          : 'border-espai-naranja text-espai-naranja hover:bg-espai-naranja hover:text-white'
+                      }`}>
+                      + Añadir titular {datos.titulares.length >= 3 ? '(máx. 3)' : ''}
+                    </button>
+
+                    <div className="bg-espai-azul/5 border border-espai-azul/20 rounded-lg p-3 flex items-center justify-between">
+                      <span className="text-xs text-espai-azul-mid font-semibold">Ingresos válidos banco</span>
+                      <span className="text-espai-azul font-bold">{fmt(resultado.ingresosValidos)}/mes</span>
+                    </div>
+                  </>
+                )}
+
+                {/* ── TAB: VIVIENDA ── */}
+                {tabActivo === 'vivienda' && (
+                  <>
+                    {/* Tipo de vivienda */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { val: 'primera', label: 'Primera residencia', sub: 'Banco financia hasta 80%' },
+                        { val: 'segunda', label: 'Segunda residencia',  sub: 'Banco financia hasta 70%' },
+                      ] as const).map(opt => (
+                        <button key={opt.val} onClick={() => set('tipoVivienda', opt.val)}
+                          className={`rounded-xl p-3 text-left border-2 transition-all ${
+                            datos.tipoVivienda === opt.val
+                              ? 'border-espai-naranja bg-orange-50'
+                              : 'border-espai-gris-borde bg-white hover:border-gray-300'
+                          }`}>
+                          <div className={`text-xs font-bold mb-0.5 ${datos.tipoVivienda === opt.val ? 'text-espai-naranja' : 'text-espai-azul'}`}>
+                            {opt.label}
+                          </div>
+                          <div className="text-[10px] text-gray-400">{opt.sub}</div>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Precios */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="label">Precio de compra (€)</label>
+                        <input type="number" className="input-field" value={datos.precio}
+                          onChange={e => set('precio', n(e.target.value))} step={1000} />
+                        <p className="text-[10px] text-gray-400 mt-1">Precio real de la operación</p>
+                      </div>
+                      <div>
+                        <label className="label">Precio de escritura (€)</label>
+                        <input type="number" className="input-field" value={datos.precioEscrituracion}
+                          onChange={e => set('precioEscrituracion', n(e.target.value))} step={1000} />
+                        <p className="text-[10px] text-gray-400 mt-1">Base para calcular ITP</p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="label">Aportación del comprador (€)</label>
+                        <input type="number" className="input-field" value={datos.fondos}
+                          onChange={e => set('fondos', n(e.target.value))} step={1000} />
+                        <p className="text-[10px] text-gray-400 mt-1">Fondos propios disponibles (sin incluir gastos)</p>
+                      </div>
+                      <div>
+                        <label className="label">Comunidad Autónoma</label>
+                        <select className="input-field" value={datos.ccaa} onChange={e => handleCcaaChange(e.target.value)}>
+                          {Object.entries(ITP_POR_CCAA).map(([key, val]) => (
+                            <option key={key} value={key}>{val.nombre} — ITP {val.pct}%</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* KPIs calculados */}
+                    <div className="grid grid-cols-3 gap-2 pt-1">
+                      {[
+                        {
+                          label: 'Capital hipotecario',
+                          value: fmt(resultado.hipoteca),
+                          sub: 'Precio − aportación',
+                          color: 'neutral',
+                        },
+                        {
+                          label: 'LTV',
+                          value: `${resultado.ltv.toFixed(1)}%`,
+                          sub: resultado.ltv > (datos.tipoVivienda === 'segunda' ? 70 : 80) ? `⚠ Supera ${datos.tipoVivienda === 'segunda' ? '70' : '80'}%` : '✓ Dentro del límite',
+                          color: resultado.ltv > (datos.tipoVivienda === 'segunda' ? 70 : 80) ? 'rojo' : 'verde',
+                        },
+                        {
+                          label: 'Tasación mínima',
+                          value: fmt(resultado.tasacionMinima),
+                          sub: `Para LTV ${datos.tipoVivienda === 'segunda' ? '70' : '80'}% banco`,
+                          color: 'neutral',
+                        },
+                      ].map(kpi => (
+                        <div key={kpi.label} className={`rounded-lg p-2.5 text-center border ${
+                          kpi.color === 'rojo' ? 'bg-red-50 border-red-200' :
+                          kpi.color === 'verde' ? 'bg-green-50 border-green-200' :
+                          'bg-gray-50 border-gray-200'
+                        }`}>
+                          <div className="text-[9px] uppercase tracking-wider text-gray-400 mb-1">{kpi.label}</div>
+                          <div className={`font-bold text-sm ${
+                            kpi.color === 'rojo' ? 'text-red-700' :
+                            kpi.color === 'verde' ? 'text-green-700' :
+                            'text-espai-azul'
+                          }`}>{kpi.value}</div>
+                          <div className={`text-[9px] mt-0.5 ${kpi.color === 'rojo' ? 'text-red-500' : kpi.color === 'verde' ? 'text-green-600' : 'text-gray-400'}`}>{kpi.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* ── TAB: GASTOS ── */}
+                {tabActivo === 'gastos' && (
+                  <>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center py-2 border-b border-espai-gris-borde">
+                        <span className="text-sm text-gray-600">ITP ({datos.itp_pct}% — {ITP_POR_CCAA[datos.ccaa]?.nombre ?? datos.ccaa})</span>
+                        <span className="font-semibold text-espai-azul">{fmt(resultado.itp)}</span>
+                      </div>
+                      {([
+                        { key: 'gasto_tasacion' as const, label: 'Tasación bancaria' },
+                        { key: 'gasto_notaria'  as const, label: 'Notaría' },
+                        { key: 'gasto_registro' as const, label: 'Registro de la Propiedad' },
+                        { key: 'gasto_gestoria' as const, label: 'Gestoría' },
+                        { key: 'gasto_espai'    as const, label: 'Comisión Espai Finance' },
+                        { key: 'gasto_otros'    as const, label: 'Otros gastos' },
+                      ]).map(g => (
+                        <div key={g.key} className="flex justify-between items-center py-2 border-b border-espai-gris-borde last:border-0">
+                          <span className="text-sm text-gray-600">{g.label}</span>
+                          <input type="number" value={datos[g.key]} onChange={e => set(g.key, n(e.target.value))}
+                            className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="bg-espai-azul rounded-xl p-4 space-y-2">
+                      <div className="flex justify-between text-sm text-white/70">
+                        <span>Fondos propios</span>
+                        <span className="font-semibold text-white">{fmt(datos.fondos)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-white/70">
+                        <span>Total gastos</span>
+                        <span className="font-semibold text-white">{fmt(resultado.totalGastos)}</span>
+                      </div>
+                      <div className="border-t border-white/20 pt-2 flex justify-between items-center">
+                        <span className="text-white font-bold text-sm uppercase tracking-wider">Liquidez necesaria</span>
+                        <span className="text-espai-naranja font-bold text-xl">{fmt(resultado.totalNecesario)}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
               </div>
             </div>
 
-            <div className="card">
+            {/* Card hipoteca — siempre visible debajo de los tabs */}
+            <div className="card mt-4">
               <div className="card-title">Parámetros de la hipoteca</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
@@ -338,7 +458,7 @@ export default function CalculatorClient() {
                       <div className="font-bold text-amber-700 text-sm">{fmtCuota(resultado.cuota)}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-[10px] text-red-600 font-semibold">Pesimista {ESCENARIOS_EURIBOR.pesimista.valor}%</div>
+                      <div className="text-[10px] text-red-600 font-semibond">Pesimista {ESCENARIOS_EURIBOR.pesimista.valor}%</div>
                       <div className="font-bold text-red-700 text-sm">{fmtCuota(cuotaPesimista)}</div>
                     </div>
                   </div>
@@ -347,7 +467,7 @@ export default function CalculatorClient() {
 
               {datos.tipoHipoteca === 'mixta' && (
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
-                  <p className="text-[10px] font-bold text-orange-700 uppercase tracking-wider mb-2">Dos períodos — cuotas distintas</p>
+                  <p className="text-[10px] font-bold text-orange-700 uppercase tracking-wider mb-2">Dos períodos</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <div className="text-[10px] text-gray-500">Años 1–{datos.periodoFijo} ({datos.tinFijo}% fijo)</div>
@@ -361,16 +481,13 @@ export default function CalculatorClient() {
                 </div>
               )}
 
-              <div>
+              <div className="mb-3">
                 <label className="label">Plazo: <span className="text-espai-azul font-bold text-sm">{datos.plazo} años</span></label>
                 <input type="range" min={5} max={35} value={datos.plazo} onChange={e => set('plazo', parseInt(e.target.value))} className="w-full accent-espai-naranja cursor-pointer mt-1" />
                 <div className="flex justify-between text-[10px] text-gray-400 mt-0.5"><span>5 años</span><span>35 años</span></div>
               </div>
-            </div>
 
-            <div className="card">
-              <div className="card-title">Seguros vinculados (estimación)</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-espai-gris-borde">
                 <div>
                   <label className="label">Seguro de vida (€/mes)</label>
                   <input type="number" className="input-field" value={datos.seguroVida} onChange={e => set('seguroVida', n(e.target.value))} />
@@ -380,54 +497,12 @@ export default function CalculatorClient() {
                   <input type="number" className="input-field" value={datos.seguroHogar} onChange={e => set('seguroHogar', n(e.target.value))} />
                 </div>
               </div>
-              <div className="bg-espai-gris rounded-lg p-3 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">Cuota hipoteca</span><span className="font-semibold">{fmtCuota(resultado.cuota)}</span></div>
-                <div className="flex justify-between mt-1"><span className="text-gray-600">+ Seguros</span><span className="font-semibold">{fmtCuota((datos.seguroVida || 0) + (datos.seguroHogar || 0))}</span></div>
-                <div className="flex justify-between mt-2 pt-2 border-t border-espai-gris-borde font-bold">
-                  <span className="text-espai-azul">CUOTA TOTAL REAL</span>
-                  <span className="text-espai-naranja">{fmtCuota(resultado.cuotaTotal)}</span>
+              {(datos.seguroVida > 0 || datos.seguroHogar > 0) && (
+                <div className="mt-3 bg-espai-gris rounded-lg p-3 text-sm flex justify-between items-center">
+                  <span className="text-gray-500">Cuota hipoteca + seguros</span>
+                  <span className="font-bold text-espai-naranja">{fmtCuota(resultado.cuotaTotal)}</span>
                 </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-title">Gastos de compraventa</div>
-              <div className="mb-3">
-                <label className="label">Comunidad Autónoma</label>
-                <select className="input-field" value={datos.ccaa} onChange={e => handleCcaaChange(e.target.value)}>
-                  {Object.entries(ITP_POR_CCAA).map(([key, val]) => (
-                    <option key={key} value={key}>{val.nombre} — ITP {val.pct}%</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center py-1.5 border-b border-espai-gris-borde">
-                  <span className="text-sm text-gray-600">ITP ({datos.itp_pct}% — {ITP_POR_CCAA[datos.ccaa]?.nombre ?? datos.ccaa})</span>
-                  <span className="font-semibold text-espai-azul">{fmt(resultado.itp)}</span>
-                </div>
-                {([
-                  { key: 'gasto_tasacion' as const, label: 'Tasación bancaria' },
-                  { key: 'gasto_notaria' as const, label: 'Notaría' },
-                  { key: 'gasto_registro' as const, label: 'Registro Propiedad' },
-                  { key: 'gasto_gestoria' as const, label: 'Gestoría' },
-                  { key: 'gasto_espai' as const, label: 'Comisión Espai Finance' },
-                  { key: 'gasto_otros' as const, label: 'Otros' },
-                ]).map(g => (
-                  <div key={g.key} className="flex justify-between items-center py-1.5 border-b border-espai-gris-borde last:border-0">
-                    <span className="text-sm text-gray-600">{g.label}</span>
-                    <input type="number" value={datos[g.key]} onChange={e => set(g.key, n(e.target.value))}
-                      className="w-24 text-right border border-espai-gris-borde rounded px-2 py-1 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja" />
-                  </div>
-                ))}
-                <div className="pt-3 mt-1 border-t-2 border-espai-gris-borde space-y-1.5">
-                  <div className="flex justify-between text-sm"><span className="font-semibold">Total gastos</span><span className="font-semibold text-espai-azul">{fmt(resultado.totalGastos)}</span></div>
-                  <div className="flex justify-between text-sm"><span>Fondos propios</span><span className="font-semibold text-espai-azul">{fmt(datos.fondos)}</span></div>
-                  <div className="flex justify-between text-base font-bold pt-1">
-                    <span className="text-espai-azul">TOTAL LIQUIDEZ NECESARIA</span>
-                    <span className="text-espai-naranja">{fmt(resultado.totalNecesario)}</span>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 

@@ -8,6 +8,9 @@ export interface DatosCalculo {
   precio: number
   precioEscrituracion: number
   fondos: number
+  tipoVivienda: 'primera' | 'segunda'
+  ccaa: string
+  itp_pct: number
   titulares: Titular[]
   tin: number
   plazo: number
@@ -16,8 +19,6 @@ export interface DatosCalculo {
   diferencial: number
   tinFijo: number
   periodoFijo: number
-  ccaa: string
-  itp_pct: number
   gasto_tasacion: number
   gasto_notaria: number
   gasto_registro: number
@@ -159,8 +160,9 @@ export function calcular(datos: DatosCalculo): ResultadoCalculo {
   const esfuerzoMax = ingresosValidos < 3000 ? 35 : 40
   if (esfuerzoReal > esfuerzoMax)
     alertaRegulatorio.push(`Esfuerzo ${esfuerzoReal.toFixed(1)}% supera el límite bancario (${esfuerzoMax}%). Operación con riesgo de denegación.`)
-  if (ltv > 80)
-    alertaRegulatorio.push(`LTV ${ltv.toFixed(1)}% supera el 80%. Requiere aval público (ICO/comunidad autónoma) o segunda garantía.`)
+  const ltvMax = datos.tipoVivienda === 'segunda' ? 70 : 80
+  if (ltv > ltvMax)
+    alertaRegulatorio.push(`LTV ${ltv.toFixed(1)}% supera el ${ltvMax}% (${datos.tipoVivienda === 'segunda' ? 'segunda residencia' : 'primera residencia'}). Requiere aval o mayor aportación.`)
   if (datos.plazo > 30 && datos.precio < 250000)
     alertaRegulatorio.push(`Plazo de ${datos.plazo} años puede ser rechazado para este importe. Los bancos suelen limitar a 25-30 años para hipotecas < 250.000€.`)
 
@@ -179,11 +181,11 @@ export function calcular(datos: DatosCalculo): ResultadoCalculo {
     ingresosValidos,
     totalIntereses,
     totalPagado,
-    tasacionMinima: hipoteca / 0.8,
+    tasacionMinima: hipoteca / (datos.tipoVivienda === 'segunda' ? 0.70 : 0.80),
     totalGastos,
     totalNecesario: datos.fondos + totalGastos,
     itp,
-    alertaLtv: ltv <= 80 ? 'ok' : ltv <= 90 ? 'aviso' : 'critico',
+    alertaLtv: ltv <= ltvMax ? 'ok' : ltv <= ltvMax + 10 ? 'aviso' : 'critico',
     alertaEsfuerzo: esfuerzoReal <= 30 ? 'ok' : esfuerzoReal <= 35 ? 'aviso' : 'critico',
     alertaRegulatorio,
   }

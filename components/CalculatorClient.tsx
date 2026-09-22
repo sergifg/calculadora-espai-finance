@@ -50,7 +50,7 @@ export default function CalculatorClient() {
   useEffect(() => {
     const stored = localStorage.getItem('espai_load_simulation')
     if (stored) {
-      try { setDatos(JSON.parse(stored)) } catch {}
+      try { setDatos(prev => ({ ...prev, ...JSON.parse(stored) })) } catch {}
       localStorage.removeItem('espai_load_simulation')
     }
   }, [])
@@ -394,7 +394,7 @@ export default function CalculatorClient() {
                         <span className="text-sm text-gray-600">Arras ya pagadas</span>
                         <p className="text-[10px] text-gray-400">Se descuenta de la liquidez necesaria</p>
                       </div>
-                      <input type="number" value={datos.arras} onChange={e => set('arras', n(e.target.value))} step={500}
+                      <input type="number" value={datos.arras ?? 0} onChange={e => set('arras', n(e.target.value))} step={500}
                         className="w-28 text-right border border-espai-gris-borde rounded-lg px-2 py-1.5 text-sm font-semibold text-espai-azul focus:outline-none focus:border-espai-naranja bg-gray-50 focus:bg-white transition-colors" />
                     </div>
 

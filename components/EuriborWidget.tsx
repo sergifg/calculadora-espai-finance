@@ -140,14 +140,15 @@ export default function EuriborWidget({ euriborFallback, mesFallback }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-right hidden sm:block group cursor-pointer hover:opacity-80 transition-opacity"
+        className="text-right group cursor-pointer hover:opacity-80 transition-opacity"
         title="Ver histórico Euríbor"
       >
         <div className="text-white/50 text-[10px] uppercase tracking-wider">
-          Euríbor 12M · {mes}
+          <span className="hidden sm:inline">Euríbor 12M · {mes}</span>
+          <span className="sm:hidden">Euríbor 12M</span>
           <span className="ml-1 text-white/30 group-hover:text-white/60 transition-colors">↗</span>
         </div>
-        <div className="text-espai-naranja font-bold text-lg">{valor.toFixed(3)}%</div>
+        <div className="text-espai-naranja font-bold text-base sm:text-lg">{valor.toFixed(3)}%</div>
       </button>
 
       {/* Modal histórico */}

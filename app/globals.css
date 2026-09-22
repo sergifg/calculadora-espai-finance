@@ -24,7 +24,7 @@
   }
 
   .card {
-    @apply bg-white rounded-xl p-5 shadow-sm border border-espai-gris-borde;
+    @apply bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-espai-gris-borde;
   }
 
   .card-title {
@@ -48,15 +48,15 @@
   }
 
   .kpi-card {
-    @apply p-3.5 rounded-lg border text-center bg-white;
+    @apply p-2.5 sm:p-3.5 rounded-lg border text-center bg-white;
   }
 
   .kpi-label {
-    @apply text-[9px] uppercase tracking-wider text-espai-texto-suave mb-1.5;
+    @apply text-[8px] sm:text-[9px] uppercase tracking-wider text-espai-texto-suave mb-1;
   }
 
   .kpi-value {
-    @apply text-base sm:text-xl font-bold text-espai-azul;
+    @apply text-sm sm:text-xl font-bold text-espai-azul;
   }
 
   .kpi-sub {

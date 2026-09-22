@@ -82,16 +82,18 @@ export default function CalculatorClient() {
 
         {/* Cliente bar */}
         <div className="bg-espai-azul-mid border-b border-white/10">
-          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-3">
-            <label className="text-[10px] text-white/60 uppercase tracking-widest whitespace-nowrap hidden sm:block">Cliente:</label>
+          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-2 sm:py-2.5 flex items-center gap-2 sm:gap-3">
+            <label className="text-[10px] text-white/50 uppercase tracking-widest whitespace-nowrap">
+              <span className="hidden sm:inline">Cliente:</span>
+              <span className="sm:hidden">👤</span>
+            </label>
             <input
               type="text"
               value={nombreCliente}
               onChange={(e) => setNombreCliente(e.target.value)}
-              placeholder="Nombre del cliente..."
-              className="bg-white/10 border border-white/20 text-white placeholder-white/30 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-espai-naranja flex-1 max-w-sm"
+              placeholder="Nombre del cliente (aparece en el PDF)..."
+              className="bg-white/10 border border-white/20 text-white placeholder-white/20 px-3 py-1.5 rounded-lg text-sm font-semibold focus:outline-none focus:border-espai-naranja flex-1 max-w-sm"
             />
-            <span className="text-white/30 text-xs hidden md:block">Aparece en el PDF generado</span>
           </div>
         </div>
 
@@ -120,7 +122,7 @@ export default function CalculatorClient() {
         )}
 
         {/* Toolbar */}
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-3 sm:pt-4 pb-0 flex items-center justify-between flex-wrap gap-2">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-3 sm:pt-4 pb-0 flex items-center justify-between gap-2">
           <div className="text-xs text-espai-texto-suave hidden sm:block">
             Euríbor 12M ({EURIBOR_MES}): <strong className="text-espai-naranja">{EURIBOR_ACTUAL.toFixed(3)}%</strong> ·
             Tipos fijos mercado: <strong>2,80% – 2,99%</strong>
@@ -135,14 +137,16 @@ export default function CalculatorClient() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Generar PDF
+            <span className="hidden sm:inline">Generar PDF</span>
+            <span className="sm:hidden">PDF</span>
           </button>
         </div>
 
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+        {/* Layout principal: en mobile las columnas se apilan, col derecha sube (order) */}
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-4 flex flex-col xl:grid xl:grid-cols-2 gap-4">
 
-          {/* COL IZQUIERDA */}
-          <div className="space-y-4">
+          {/* COL IZQUIERDA — formularios (en mobile va debajo, order-2) */}
+          <div className="space-y-4 order-2 xl:order-1">
 
             <div className="card">
               <div className="card-title">Datos de la operación</div>
@@ -340,18 +344,47 @@ export default function CalculatorClient() {
             </div>
           </div>
 
-          {/* COL DERECHA */}
-          <div className="space-y-4">
-            <div className="rounded-xl p-4 sm:p-6 text-center" style={{ background: 'linear-gradient(135deg, #002F4F, #293C5B)', borderLeft: '5px solid #f58134' }}>
-              <div className="text-[11px] uppercase tracking-widest text-white/60 mb-1">Cuota mensual hipoteca</div>
-              <div className="text-4xl sm:text-5xl font-bold text-espai-naranja my-2">{fmtCuota(resultado.cuota)}</div>
-              {(datos.seguroVida || datos.seguroHogar) ? (
-                <div className="text-white/70 text-sm mt-1">
-                  + seguros {fmtCuota((datos.seguroVida || 0) + (datos.seguroHogar || 0))} =
-                  <span className="text-white font-bold ml-1">{fmtCuota(resultado.cuotaTotal)} total</span>
+          {/* COL DERECHA — resultados (en mobile va arriba, order-1) */}
+          <div className="space-y-4 order-1 xl:order-2">
+            <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #002F4F, #293C5B)', borderLeft: '5px solid #f58134' }}>
+              <div className="p-4 sm:p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Cuota mensual</div>
+                    <div className="text-4xl sm:text-5xl font-bold text-espai-naranja leading-none">{fmtCuota(resultado.cuota)}</div>
+                    {(datos.seguroVida || datos.seguroHogar) ? (
+                      <div className="text-white/60 text-xs mt-1.5">
+                        + seguros {fmtCuota((datos.seguroVida || 0) + (datos.seguroHogar || 0))} =
+                        <span className="text-white font-bold ml-1">{fmtCuota(resultado.cuotaTotal)}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-white/40 text-[10px] uppercase tracking-wider">Hipoteca</div>
+                    <div className="text-white font-bold text-lg">{fmt(resultado.hipoteca)}</div>
+                    <div className="text-white/40 text-[10px] mt-1">{datos.tin}% TIN · {datos.plazo}a</div>
+                  </div>
                 </div>
-              ) : null}
-              <div className="text-xs text-white/40 mt-2">{datos.tin}% TIN · {datos.plazo} años · {fmt(resultado.hipoteca)} hipoteca</div>
+              </div>
+              {/* Barra de esfuerzo */}
+              <div className="px-4 sm:px-6 pb-4">
+                <div className="flex items-center justify-between text-[10px] text-white/40 mb-1">
+                  <span>Esfuerzo mensual</span>
+                  <span className={resultado.esfuerzoReal > 35 ? 'text-red-400 font-bold' : resultado.esfuerzoReal > 30 ? 'text-amber-400 font-bold' : 'text-green-400 font-bold'}>
+                    {resultado.esfuerzoReal.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${resultado.esfuerzoReal > 35 ? 'bg-red-400' : resultado.esfuerzoReal > 30 ? 'bg-amber-400' : 'bg-green-400'}`}
+                    style={{ width: `${Math.min(resultado.esfuerzoReal, 50) * 2}%` }}
+                  />
+                </div>
+              </div>
+              {/* Hint mobile — solo en xs */}
+              <div className="xl:hidden bg-white/5 px-4 py-2 text-center">
+                <span className="text-white/30 text-[10px]">↓ Ajusta los datos abajo para recalcular</span>
+              </div>
             </div>
             <KpiGrid resultado={resultado} plazo={datos.plazo} />
             <BankTable hipoteca={resultado.hipoteca} ingresosMes={datos.ingresos1 + datos.ingresos2} euribor={datos.euribor} currentTin={datos.tin} />

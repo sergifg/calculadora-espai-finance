@@ -601,7 +601,18 @@ export default function CalculatorClient() {
 
           {/* COL DERECHA — resultados (en mobile va arriba, order-1) */}
           <div className="space-y-4 order-1 xl:order-2">
-            <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #002F4F, #293C5B)', borderLeft: '5px solid #f58134' }}>
+
+            {/* Estado vacío — sin precio */}
+            {datos.precio === 0 && (
+              <div className="rounded-xl flex flex-col items-center justify-center py-14 px-6 text-center"
+                style={{ background: 'linear-gradient(135deg, #002F4F, #293C5B)', borderLeft: '5px solid #f58134' }}>
+                <div className="text-4xl mb-3">🏠</div>
+                <div className="text-white font-bold text-base mb-1">Introduce el precio de la vivienda</div>
+                <div className="text-white/40 text-xs">Ve al tab Vivienda e introduce el precio de compra para ver la simulación</div>
+              </div>
+            )}
+
+            {datos.precio > 0 && <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #002F4F, #293C5B)', borderLeft: '5px solid #f58134' }}>
               <div className="p-4 sm:p-6">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
@@ -640,10 +651,13 @@ export default function CalculatorClient() {
               <div className="xl:hidden bg-white/5 px-4 py-2 text-center">
                 <span className="text-white/30 text-[10px]">↓ Ajusta los datos abajo para recalcular</span>
               </div>
-            </div>
-            <KpiGrid resultado={resultado} plazo={datos.plazo} />
-            <BankTable hipoteca={resultado.hipoteca} ingresosMes={resultado.ingresosValidos} euribor={datos.euribor} currentTin={datos.tin} />
-            <AmortTable hipoteca={resultado.hipoteca} tin={datos.tin} plazo={datos.plazo} />
+            </div>}
+
+            {datos.precio > 0 && <>
+              <KpiGrid resultado={resultado} plazo={datos.plazo} />
+              <BankTable hipoteca={resultado.hipoteca} ingresosMes={resultado.ingresosValidos} euribor={datos.euribor} currentTin={datos.tin} />
+              <AmortTable hipoteca={resultado.hipoteca} tin={datos.tin} plazo={datos.plazo} />
+            </>}
           </div>
         </div>
 

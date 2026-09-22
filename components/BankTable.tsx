@@ -96,7 +96,9 @@ export default function BankTable({ hipoteca, ingresosMes, euribor, currentTin }
             </svg>
             {syncing ? 'Actualizando...' : 'Actualizar tipos'}
           </button>
-          <button className="text-xs px-3 py-1.5 border border-espai-gris-borde rounded-lg text-espai-azul-mid font-semibold hover:bg-espai-naranja hover:text-white hover:border-espai-naranja transition-colors">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs px-3 py-1.5 border border-espai-gris-borde rounded-lg text-espai-azul-mid font-semibold hover:bg-espai-naranja hover:text-white hover:border-espai-naranja transition-colors">
             {expanded ? 'Ocultar ▲' : 'Ver tabla ▼'}
           </button>
         </div>

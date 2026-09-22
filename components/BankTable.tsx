@@ -29,6 +29,7 @@ export default function BankTable({ hipoteca, ingresosMes, euribor, currentTin }
   const [bancosData, setBancosData] = useState<Record<string, BancoData>>({})
   const [syncing, setSyncing] = useState(false)
   const [lastSync, setLastSync] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     fetch('/api/banks')
@@ -76,28 +77,39 @@ export default function BankTable({ hipoteca, ingresosMes, euribor, currentTin }
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-3">
+      <div
+        className="flex items-center justify-between cursor-pointer"
+        onClick={() => setExpanded(!expanded)}
+      >
         <div className="card-title mb-0 pb-0 border-0">
           Comparativa de mercado · {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
         </div>
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="flex items-center gap-1.5 text-[10px] text-espai-texto-suave hover:text-espai-naranja transition-colors font-semibold border border-espai-gris-borde rounded-lg px-2.5 py-1.5 hover:border-espai-naranja disabled:opacity-50"
-          title="Actualizar tipos desde fuentes externas"
-        >
-          <svg className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          {syncing ? 'Actualizando...' : 'Actualizar tipos'}
-        </button>
+        <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center gap-1.5 text-[10px] text-espai-texto-suave hover:text-espai-naranja transition-colors font-semibold border border-espai-gris-borde rounded-lg px-2.5 py-1.5 hover:border-espai-naranja disabled:opacity-50"
+            title="Actualizar tipos desde fuentes externas"
+          >
+            <svg className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {syncing ? 'Actualizando...' : 'Actualizar tipos'}
+          </button>
+          <button className="text-xs px-3 py-1.5 border border-espai-gris-borde rounded-lg text-espai-azul-mid font-semibold hover:bg-espai-naranja hover:text-white hover:border-espai-naranja transition-colors">
+            {expanded ? 'Ocultar ▲' : 'Ver tabla ▼'}
+          </button>
+        </div>
       </div>
-      {lastSync && (
-        <p className="text-[10px] text-green-600 mb-2">✓ Actualizado a las {lastSync}</p>
-      )}
-      <div className="border-b border-espai-gris-borde mb-3" />
 
-      <div className="overflow-x-auto">
+      {expanded && (
+        <>
+          {lastSync && (
+            <p className="text-[10px] text-green-600 mt-2">✓ Actualizado a las {lastSync}</p>
+          )}
+          <div className="border-b border-espai-gris-borde my-3" />
+
+          <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-espai-azul text-white">
@@ -204,11 +216,13 @@ export default function BankTable({ hipoteca, ingresosMes, euribor, currentTin }
             })}
           </tbody>
         </table>
-      </div>
-      <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-gray-400">
-        <span>* Tipos orientativos. Confirmar con cada entidad antes de comprometerse.</span>
-        <span>· Euríbor usado: <strong>{euribor.toFixed(3)}%</strong></span>
-      </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-gray-400">
+            <span>* Tipos orientativos. Confirmar con cada entidad antes de comprometerse.</span>
+            <span>· Euríbor usado: <strong>{euribor.toFixed(3)}%</strong></span>
+          </div>
+        </>
+      )}
     </div>
   )
 }

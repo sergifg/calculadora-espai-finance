@@ -66,6 +66,7 @@ export default function CalculatorClient() {
   const [showSimPanel, setShowSimPanel] = useState(false)
   const [simulaciones, setSimulaciones] = useState<SimulacionGuardada[]>([])
   const [nombreSim, setNombreSim] = useState('')
+  const [simActivaId, setSimActivaId] = useState<string | null>(null)
 
   useEffect(() => {
     setSimulaciones(leerSimulaciones())
@@ -95,6 +96,19 @@ export default function CalculatorClient() {
   function handleCargar(sim: SimulacionGuardada) {
     setDatos({ ...DEFAULTS, ...sim.datos })
     setNombreCliente(sim.nombreCliente ?? '')
+    setSimActivaId(sim.id)
+    setShowSimPanel(false)
+  }
+
+  function handleActualizar() {
+    if (!simActivaId) return
+    const actualizadas = leerSimulaciones().map(s =>
+      s.id === simActivaId
+        ? { ...s, datos, nombreCliente, fecha: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }
+        : s
+    )
+    guardarSimulaciones(actualizadas)
+    setSimulaciones(actualizadas)
     setShowSimPanel(false)
   }
 
@@ -102,6 +116,7 @@ export default function CalculatorClient() {
     const actualizadas = leerSimulaciones().filter(s => s.id !== id)
     guardarSimulaciones(actualizadas)
     setSimulaciones(actualizadas)
+    if (simActivaId === id) setSimActivaId(null)
   }
 
   useEffect(() => {
@@ -245,8 +260,10 @@ export default function CalculatorClient() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                 </svg>
-                <span className="hidden sm:inline">Simulaciones</span>
-                {simulaciones.length > 0 && (
+                <span className="hidden sm:inline">{simActivaId ? 'Editando' : 'Simulaciones'}</span>
+                {simActivaId ? (
+                  <span className="bg-espai-azul text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">✎</span>
+                ) : simulaciones.length > 0 && (
                   <span className="bg-espai-naranja text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{simulaciones.length}</span>
                 )}
               </button>
@@ -256,9 +273,27 @@ export default function CalculatorClient() {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowSimPanel(false)} />
                   <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-white border border-espai-gris-borde rounded-xl shadow-xl z-50 overflow-hidden">
+                  {/* Simulación activa — botón Actualizar */}
+                  {simActivaId && (
+                    <div className="p-3 border-b border-espai-gris-borde bg-blue-50">
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-espai-azul-mid mb-1.5">
+                        Editando: <span className="text-espai-azul">{simulaciones.find(s => s.id === simActivaId)?.nombre ?? '—'}</span>
+                      </p>
+                      <div className="flex gap-2">
+                        <button onClick={handleActualizar} className="flex-1 bg-espai-azul text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
+                          Actualizar esta simulación
+                        </button>
+                        <button onClick={() => setSimActivaId(null)} className="text-[10px] text-espai-texto-suave border border-espai-gris-borde rounded-lg px-2 py-1.5 hover:border-gray-400 transition-colors whitespace-nowrap">
+                          Nueva
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Guardar nueva */}
+                  {!simActivaId && (
                   <div className="p-3 border-b border-espai-gris-borde bg-gray-50">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-espai-texto-suave mb-2">Guardar simulación actual</p>
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-espai-texto-suave mb-2">Guardar como nueva simulación</p>
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -273,6 +308,7 @@ export default function CalculatorClient() {
                       </button>
                     </div>
                   </div>
+                  )}
 
                   {/* Lista simulaciones guardadas */}
                   {simulaciones.length === 0 ? (
@@ -280,14 +316,22 @@ export default function CalculatorClient() {
                   ) : (
                     <div className="max-h-64 overflow-y-auto">
                       {simulaciones.map(sim => (
-                        <div key={sim.id} className="flex items-center gap-2 px-3 py-2.5 border-b border-espai-gris-borde hover:bg-gray-50 transition-colors">
+                        <div key={sim.id} className={`flex items-center gap-2 px-3 py-2.5 border-b border-espai-gris-borde transition-colors ${sim.id === simActivaId ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                           <div className="flex-1 min-w-0">
-                            <div className="text-xs font-semibold text-espai-azul truncate">{sim.nombre}</div>
+                            <div className="flex items-center gap-1.5">
+                              {sim.id === simActivaId && <span className="w-1.5 h-1.5 rounded-full bg-espai-azul shrink-0" />}
+                              <div className="text-xs font-semibold text-espai-azul truncate">{sim.nombre}</div>
+                            </div>
                             <div className="text-[10px] text-espai-texto-suave">{sim.fecha}</div>
                           </div>
-                          <button onClick={() => handleCargar(sim)} className="text-[10px] font-bold text-espai-azul-mid border border-espai-gris-borde rounded px-2 py-1 hover:border-espai-naranja hover:text-espai-naranja transition-colors whitespace-nowrap">
-                            Cargar
-                          </button>
+                          {sim.id !== simActivaId && (
+                            <button onClick={() => handleCargar(sim)} className="text-[10px] font-bold text-espai-azul-mid border border-espai-gris-borde rounded px-2 py-1 hover:border-espai-naranja hover:text-espai-naranja transition-colors whitespace-nowrap">
+                              Cargar
+                            </button>
+                          )}
+                          {sim.id === simActivaId && (
+                            <span className="text-[10px] text-espai-azul font-semibold whitespace-nowrap">Activa</span>
+                          )}
                           <button onClick={() => handleEliminar(sim.id)} className="text-gray-300 hover:text-red-400 transition-colors text-sm font-bold">✕</button>
                         </div>
                       ))}
